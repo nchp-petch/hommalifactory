@@ -250,12 +250,12 @@
 // prices is keyed by temperature — one price per ร้อน/เย็น option a drink offers.
 // Drinks with only one key (e.g. เย็น only) are single-temp and skip the temp picker.
 // roasts / beans are OPTIONAL and only apply to coffee-based drinks:
-//   roasts: array of roast levels, no price change, e.g. ['อ่อน','กลาง','เข้ม']
+//   roasts: array of roast levels, no price change, e.g. ['อ่อน','กลาง','เข้ม','เข้มพิเศษ']
 //   beans:  object of bean choice -> price add-on, e.g. {'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}
 // Drinks without `roasts`/`beans` simply won't show those pickers (e.g. matcha, ชาไทย).
 const DRINKS = [
-  {id:'d1', name:'จัสมินไรซ์ลาเต้', en:'Jasmine Rice Latte', emoji:'🍚', prices:{'ร้อน':75,'เย็น':85},
-    roasts:['อ่อน','กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
+  {id:'d1', name:'อเมริกาโน่', en:'Americano', emoji:'☕️', prices:{'ร้อน':60,'เย็น':65},
+    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'], beans:{'เมล็ดประจำร้าน':0,'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35 }},
   {id:'d2', name:'ข้าวคั่วโฮจิฉะลาเต้', en:'Roasted Rice Houjicha', emoji:'🍵', prices:{'ร้อน':85,'เย็น':95}},
   {id:'d3', name:'มัทฉะข้าวหอมมะลิ', en:'Jasmine Rice Matcha', emoji:'🍃', prices:{'ร้อน':85,'เย็น':95}},
   {id:'d4', name:'อเมริกาโนข้าวหอม', en:'Rice-Infused Americano', emoji:'☕', prices:{'ร้อน':55,'เย็น':65},
