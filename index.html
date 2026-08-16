@@ -1,302 +1,763 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบสั่งเครื่องดื่ม</title>
-  
-  <!-- 1. ดึง Tailwind CSS มาแต่งหน้าจอ -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- 2. ดึง Vue.js 3 มาทำระบบสลับหน้า/คำนวณราคา -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  
-  <!-- 3. ดึง LINE LIFF SDK มาใช้เชื่อมต่อกับ LINE -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Hommali Factory — สั่งเครื่องดื่ม</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --husk:#231d17;
+    --husk-2:#2c241b;
+    --surface:#332a1f;
+    --surface-2:#3d3225;
+    --paddy:#8a9a5f;
+    --paddy-dark:#6a7a45;
+    --jasmine:#efe4c8;
+    --jasmine-dim:#cabf9e;
+    --gold:#cda24d;
+    --clay:#b4703c;
+    --danger:#c0604a;
+    --line-blue:#06c755;
+    --radius:16px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--husk);
+    color:var(--jasmine);
+    font-family:'Noto Sans Thai',sans-serif;
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+  }
+  #phone{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    background:linear-gradient(180deg,var(--husk-2),var(--husk));
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  h1,h2,h3{font-family:'Noto Serif Thai',serif; margin:0;}
+  ::-webkit-scrollbar{display:none;}
+
+  /* ---- top bar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 12px;
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg,var(--husk-2) 70%,transparent);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{
+    width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,var(--gold),var(--paddy-dark));
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+  .brand-text h1{font-size:15px;color:var(--jasmine);letter-spacing:.3px;}
+  .brand-text span{font-size:10px;color:var(--jasmine-dim);letter-spacing:1.5px;text-transform:uppercase;}
+  .admin-toggle{
+    background:var(--surface);border:1px solid #4a3f2e;color:var(--jasmine-dim);
+    width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;
+  }
+  .admin-toggle.active{background:var(--gold);color:var(--husk);border-color:var(--gold);}
+
+  /* ---- content ---- */
+  .content{flex:1; padding:4px 18px 100px; overflow-y:auto;}
+  .section-title{font-size:19px;color:var(--jasmine);margin:14px 0 4px;}
+  .section-sub{font-size:12px;color:var(--jasmine-dim);margin-bottom:16px;}
+
+  /* ---- login ---- */
+  .login-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px;text-align:center;gap:18px;}
+  .grain-hero{font-size:52px;line-height:1;}
+  .login-wrap h1{font-size:24px;}
+  .login-wrap p{font-size:13px;color:var(--jasmine-dim);max-width:280px;line-height:1.7;}
+  .line-btn{
+    background:var(--line-blue); color:#fff; border:none; border-radius:999px;
+    padding:14px 28px; font-size:15px; font-weight:600; font-family:inherit;
+    display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:0 6px 18px rgba(6,199,85,.35);
+  }
+  .field{width:100%;max-width:280px;text-align:left;margin-top:6px;}
+  .field label{font-size:11px;color:var(--jasmine-dim);display:block;margin-bottom:5px;}
+  .field input{
+    width:100%;padding:11px 13px;border-radius:var(--radius-sm);border:1px solid #4a3f2e;
+    background:var(--surface); color:var(--jasmine); font-family:inherit; font-size:14px;
+  }
+  .field input:focus{outline:2px solid var(--gold);}
+  .primary-btn{
+    width:100%;max-width:280px;padding:13px;border:none;border-radius:999px;
+    background:var(--gold); color:var(--husk); font-weight:700; font-size:14px;
+    font-family:inherit; cursor:pointer; margin-top:8px;
+  }
+  .primary-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* ---- drink grid ---- */
+  .drink-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .drink-card{
+    background:var(--surface); border-radius:var(--radius); padding:14px;
+    border:1px solid #453a29; cursor:pointer; transition:.15s;
+  }
+  .drink-card:active{transform:scale(.97);}
+  .drink-emoji{font-size:26px;margin-bottom:8px;}
+  .drink-name{font-size:13.5px;font-weight:600;line-height:1.3;color:var(--jasmine);}
+  .drink-name-en{font-size:10px;color:var(--jasmine-dim);margin-top:2px;}
+  .drink-price{font-size:13px;color:var(--gold);margin-top:8px;font-weight:700;}
+
+  /* ---- modal ---- */
+  .overlay{
+    position:absolute;inset:0;background:rgba(15,12,8,.72);z-index:50;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .sheet{
+    width:100%;max-width:430px;background:var(--husk-2);
+    border-radius:22px 22px 0 0;padding:22px 20px 26px;
+    max-height:88vh;overflow-y:auto;
+    animation:slideup .22s ease-out;
+  }
+  @keyframes slideup{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .close-x{background:none;border:none;color:var(--jasmine-dim);font-size:20px;cursor:pointer;}
+  .option-label{font-size:12px;color:var(--jasmine-dim);margin:16px 0 8px;letter-spacing:.3px;}
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{
+    padding:9px 16px;border-radius:999px;border:1px solid #4a3f2e;background:var(--surface);
+    color:var(--jasmine-dim);font-size:13px;cursor:pointer;font-family:inherit;
+  }
+  .pill.selected{background:var(--paddy);border-color:var(--paddy);color:#1a1f10;font-weight:700;}
+
+  /* sweetness dial (signature element) */
+  .dial-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:6px;}
+  .dial{position:relative;width:150px;height:150px;}
+  .dial svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .dial-track{fill:none;stroke:#4a3f2e;stroke-width:10;}
+  .dial-fill{fill:none;stroke:var(--gold);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .15s;}
+  .dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .dial-center .val{font-size:26px;font-weight:700;color:var(--gold);font-family:'Noto Serif Thai',serif;}
+  .dial-center .lbl{font-size:11px;color:var(--jasmine-dim);margin-top:2px;}
+  .dial input[type=range]{
+    position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;
+  }
+  .sweet-ticks{display:flex;justify-content:space-between;width:150px;font-size:9px;color:var(--jasmine-dim);}
+
+  .qty-row{display:flex;align-items:center;gap:16px;margin-top:16px;}
+  .qty-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid #4a3f2e;color:var(--jasmine);font-size:16px;cursor:pointer;}
+  .qty-val{font-size:16px;font-weight:700;min-width:20px;text-align:center;}
+  .sheet-total{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:14px;border-top:1px dashed #4a3f2e;}
+  .sheet-total .amt{font-size:20px;color:var(--gold);font-weight:700;}
+
+  /* ---- bottom nav ---- */
+  .bottomnav{
+    position:absolute; bottom:0; left:0; right:0; z-index:20;
+    background:var(--husk-2); border-top:1px solid #4a3f2e;
+    display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-btn{
+    flex:1; background:none; border:none; color:var(--jasmine-dim);
+    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px;
+    padding:6px 2px; cursor:pointer; font-family:inherit; position:relative;
+  }
+  .nav-btn.active{color:var(--gold);}
+  .nav-icon{font-size:18px;}
+  .nav-badge{
+    position:absolute; top:2px; right:22%; background:var(--danger); color:#fff;
+    font-size:9px; border-radius:999px; padding:1px 5px; font-weight:700;
+  }
+
+  /* ---- address / map ---- */
+  #map{height:230px;border-radius:var(--radius);overflow:hidden;margin-top:6px;border:1px solid #453a29;}
+  .addr-hint{font-size:11px;color:var(--jasmine-dim);margin-top:8px;line-height:1.6;}
+  .addr-card{
+    background:var(--surface);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;
+    border:1px solid #453a29; display:flex; justify-content:space-between; align-items:center;
+  }
+  .addr-card.selected{border-color:var(--paddy); background:#3a3f27;}
+  .addr-card .label{font-size:13px;font-weight:600;}
+  .addr-card .detail{font-size:10.5px;color:var(--jasmine-dim);margin-top:3px;}
+  .tag-btn{background:none;border:1px solid var(--paddy);color:var(--paddy);border-radius:999px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;}
+
+  /* ---- cart ---- */
+  .cart-item{display:flex;gap:12px;background:var(--surface);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:1px solid #453a29;}
+  .cart-item .ci-emoji{font-size:24px;}
+  .cart-item .ci-info{flex:1;}
+  .cart-item .ci-name{font-size:13px;font-weight:600;}
+  .cart-item .ci-meta{font-size:10.5px;color:var(--jasmine-dim);margin-top:3px;line-height:1.5;}
+  .cart-item .ci-price{font-size:13px;color:var(--gold);font-weight:700;}
+  .remove-link{background:none;border:none;color:var(--danger);font-size:10.5px;cursor:pointer;margin-top:6px;padding:0;font-family:inherit;}
+  .summary-row{display:flex;justify-content:space-between;font-size:13px;color:var(--jasmine-dim);margin-bottom:6px;}
+  .summary-row.total{color:var(--jasmine);font-weight:700;font-size:15px;border-top:1px dashed #4a3f2e;padding-top:10px;margin-top:6px;}
+
+  /* ---- checkout / payment ---- */
+  .qr-box{background:#fff;border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:8px;}
+  .qr-box svg{width:160px;height:160px;}
+  .qr-box .acc{color:#333;font-size:11px;text-align:center;line-height:1.6;}
+  .upload-box{
+    border:1.5px dashed #5a4d38; border-radius:var(--radius); padding:22px;
+    text-align:center; margin-top:14px; cursor:pointer; background:var(--surface);
+  }
+  .upload-box img{max-width:100%;max-height:180px;border-radius:10px;margin-top:10px;}
+  .upload-box .up-icon{font-size:26px;}
+  .upload-box p{font-size:12px;color:var(--jasmine-dim);margin-top:6px;}
+
+  /* ---- orders ---- */
+  .order-card{background:var(--surface);border-radius:var(--radius);padding:15px;margin-bottom:14px;border:1px solid #453a29;}
+  .order-head{display:flex;justify-content:space-between;align-items:flex-start;}
+  .order-id{font-size:12px;color:var(--jasmine-dim);}
+  .order-status-pill{font-size:11px;padding:4px 10px;border-radius:999px;font-weight:700;}
+  .grain-track{display:flex;gap:5px;margin:14px 0 8px;}
+  .grain{font-size:16px;opacity:.25;transition:.2s;}
+  .grain.filled{opacity:1;}
+  .stage-label{font-size:11px;color:var(--jasmine-dim);}
+  .order-items{font-size:11.5px;color:var(--jasmine-dim);margin-top:10px;line-height:1.7;}
+
+  /* ---- toast (LINE-style push notification) ---- */
+  .toast{
+    position:absolute; top:14px; left:14px; right:14px; z-index:100;
+    background:#1e1e1e; border-radius:14px; padding:12px 14px; display:flex; gap:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4); border:1px solid #06c75555;
+    animation:toastin .25s ease-out;
+  }
+  @keyframes toastin{from{transform:translateY(-16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .toast .t-icon{width:30px;height:30px;border-radius:8px;background:var(--line-blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+  .toast .t-title{font-size:11.5px;color:#8fd; font-weight:700;}
+  .toast .t-body{font-size:12px;color:#eee;margin-top:2px;line-height:1.4;}
+
+  /* ---- admin ---- */
+  .admin-order{background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:12px;border:1px solid #453a29;}
+  .admin-btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .admin-btn{flex:1;min-width:100px;padding:9px;border-radius:999px;border:none;background:var(--paddy);color:#182010;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .admin-btn.secondary{background:var(--surface-2);color:var(--jasmine-dim);border:1px solid #4a3f2e;}
+  .slip-thumb{width:100%;border-radius:10px;margin-top:8px;max-height:160px;object-fit:cover;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--jasmine-dim);}
+  .empty-state .ee{font-size:34px;margin-bottom:10px;}
+</style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 pb-24">
+<body>
+<div id="phone">
+  <div id="toast-layer"></div>
+  <div id="app"></div>
+</div>
 
-  <div id="app" class="max-w-md mx-auto bg-white min-h-screen shadow-md relative">
-    
-    <!-- Header: แสดงโปรไฟล์ LINE และ แต้มสะสม -->
-    <div class="bg-amber-600 text-white p-4 flex items-center justify-between sticky top-0 z-40 shadow">
-      <div class="flex items-center space-x-3">
-        <img :src="profile.pictureUrl || 'https://via.placeholder.com/40'" class="w-10 h-10 rounded-full border-2 border-white object-cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ===================== DATA ===================== */
+// prices is keyed by temperature — one price per ร้อน/เย็น option a drink offers.
+// Drinks with only one key (e.g. เย็น only) are single-temp and skip the temp picker.
+const DRINKS = [
+  {id:'d1', name:'จัสมินไรซ์ลาเต้', en:'Jasmine Rice Latte', emoji:'🍚', prices:{'ร้อน':75,'เย็น':85}},
+  {id:'d2', name:'ข้าวคั่วโฮจิฉะลาเต้', en:'Roasted Rice Houjicha', emoji:'🍵', prices:{'ร้อน':85,'เย็น':95}},
+  {id:'d3', name:'มัทฉะข้าวหอมมะลิ', en:'Jasmine Rice Matcha', emoji:'🍃', prices:{'ร้อน':85,'เย็น':95}},
+  {id:'d4', name:'อเมริกาโนข้าวหอม', en:'Rice-Infused Americano', emoji:'☕', prices:{'ร้อน':55,'เย็น':65}},
+  {id:'d5', name:'คาปูชิโนข้าวคั่ว', en:'Toasted Rice Cappuccino', emoji:'🫘', prices:{'ร้อน':80}},
+  {id:'d6', name:'ชาไทยข้าวหอมมะลิ', en:'Jasmine Rice Thai Tea', emoji:'🧋', prices:{'ร้อน':60,'เย็น':70}},
+  {id:'d7', name:'น้ำข้าวหอมมะลิเย็น', en:'Cold Jasmine Rice Milk', emoji:'🥛', prices:{'เย็น':60}},
+  {id:'d8', name:'เอสเพรสโซ่โทนิคข้าว', en:'Rice Espresso Tonic', emoji:'🥃', prices:{'เย็น':85}},
+];
+const SWEET_LABELS = [[0,'ไม่หวาน'],[25,'หวานน้อย'],[50,'หวานปกติ'],[75,'หวานมาก'],[100,'หวานเต็ม']];
+const STAGES = [
+  {k:'slip_review', label:'รอตรวจสอบสลิป', color:'#cda24d'},
+  {k:'confirmed', label:'ยืนยันชำระเงินแล้ว', color:'#8a9a5f'},
+  {k:'preparing', label:'กำลังเตรียมเครื่องดื่ม', color:'#8a9a5f'},
+  {k:'ready', label:'พร้อมส่ง / พร้อมรับ', color:'#8a9a5f'},
+  {k:'completed', label:'จัดส่งสำเร็จ', color:'#6a7a45'},
+];
+
+/* ===================== STATE ===================== */
+let state = {
+  profile: null,          // {name, phone}
+  view: 'login',          // login | menu | address | cart | orders
+  isAdmin: false,
+  addresses: [],
+  selectedAddressId: null,
+  cart: [],
+  orders: [],
+  modalDrink: null,       // drink customization sheet
+  pendingPin: null,       // {lat,lng} chosen on map, not yet saved
+  checkoutSlip: null,     // base64 image while composing an order
+};
+let mapInstance = null, mapMarker = null;
+let orderCounter = 1000;
+
+/* ===================== STORAGE (shared shop backend demo) ===================== */
+async function loadOrders(){
+  try{
+    const res = await window.storage.get('hommali:orders', true);
+    if(res && res.value) state.orders = JSON.parse(res.value);
+  }catch(e){ /* no orders yet */ }
+}
+async function saveOrders(){
+  try{ await window.storage.set('hommali:orders', JSON.stringify(state.orders), true); }
+  catch(e){ console.error('storage save failed', e); }
+}
+
+/* ===================== HELPERS ===================== */
+function money(n){ return n.toLocaleString('th-TH',{minimumFractionDigits:0}); }
+function priceRangeLabel(d){
+  const vals = Object.values(d.prices);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  return min===max ? `${money(min)} บาท` : `${money(min)}–${money(max)} บาท`;
+}
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function showToast(title, body){
+  const layer = document.getElementById('toast-layer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<div class="t-icon">🔔</div><div><div class="t-title">${title}</div><div class="t-body">${body}</div></div>`;
+  layer.appendChild(t);
+  setTimeout(()=>{ t.style.transition='.3s'; t.style.opacity='0'; t.style.transform='translateY(-10px)'; setTimeout(()=>t.remove(),300); }, 3400);
+}
+
+/* ===================== RENDER ROOT ===================== */
+function render(){
+  const app = document.getElementById('app');
+  if(!state.profile){ app.innerHTML = renderLogin(); attachLoginEvents(); return; }
+
+  let body = '';
+  if(state.isAdmin){ body = renderAdmin(); }
+  else {
+    if(state.view==='menu') body = renderMenu();
+    else if(state.view==='address') body = renderAddress();
+    else if(state.view==='cart') body = renderCart();
+    else if(state.view==='orders') body = renderOrders();
+  }
+
+  app.innerHTML = `
+    ${renderTopbar()}
+    <div class="content">${body}</div>
+    ${state.isAdmin ? '' : renderBottomNav()}
+    ${state.modalDrink ? renderDrinkSheet(state.modalDrink) : ''}
+  `;
+  attachGlobalEvents();
+  if(state.view==='address' && !state.isAdmin) setTimeout(initMap, 0);
+  if(state.modalDrink) attachSheetEvents();
+}
+
+function renderTopbar(){
+  return `
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">🌾</div>
+      <div class="brand-text">
+        <h1>Hommali Factory</h1>
+        <span>${state.isAdmin ? 'จอร้านค้า · Staff' : 'สวัสดี ' + escapeHtml(state.profile.name)}</span>
+      </div>
+    </div>
+    <button class="admin-toggle ${state.isAdmin?'active':''}" id="toggle-admin" title="สลับมุมมองร้านค้า">⚙️</button>
+  </div>`;
+}
+
+function renderBottomNav(){
+  const pendingCount = state.orders.filter(o=>o.memberPhone===state.profile.phone && o.status!=='completed').length;
+  const items = [
+    {k:'menu', icon:'🍵', label:'เมนู'},
+    {k:'address', icon:'📍', label:'ที่อยู่'},
+    {k:'cart', icon:'🧺', label:'ตะกร้า', badge: state.cart.length||null},
+    {k:'orders', icon:'🧾', label:'ออเดอร์', badge: pendingCount||null},
+  ];
+  return `<div class="bottomnav">
+    ${items.map(i=>`
+      <button class="nav-btn ${state.view===i.k?'active':''}" data-nav="${i.k}">
+        ${i.badge?`<span class="nav-badge">${i.badge}</span>`:''}
+        <span class="nav-icon">${i.icon}</span>${i.label}
+      </button>`).join('')}
+  </div>`;
+}
+
+/* ===================== LOGIN ===================== */
+function renderLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="grain-hero">🌾☕</div>
+    <h1>Hommali Factory</h1>
+    <p>สั่งเครื่องดื่มและชำระเงินผ่านระบบสไตล์ LINE — ลงทะเบียน ปักหมุดที่อยู่ เลือกเมนู แนบสลิป และรับแจ้งเตือนสถานะออเดอร์แบบเรียลไทม์</p>
+    <button class="line-btn" id="line-login">💬 เข้าสู่ระบบด้วย LINE</button>
+    <div id="reg-fields" style="display:none; margin-top:6px; display:flex; flex-direction:column; align-items:center; gap:10px;">
+      <div class="field"><label>ชื่อที่ใช้แสดง</label><input id="reg-name" placeholder="เช่น เพชร"></div>
+      <div class="field"><label>เบอร์โทรศัพท์</label><input id="reg-phone" placeholder="08X-XXX-XXXX"></div>
+      <button class="primary-btn" id="reg-submit">ยืนยันการลงทะเบียน</button>
+    </div>
+  </div>`;
+}
+function attachLoginEvents(){
+  document.getElementById('line-login').onclick = ()=>{
+    document.getElementById('reg-fields').style.display = 'flex';
+    document.getElementById('line-login').style.display = 'none';
+  };
+  const submit = document.getElementById('reg-submit');
+  if(submit) submit.onclick = async ()=>{
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    if(!name || !phone){ alert('กรุณากรอกชื่อและเบอร์โทรศัพท์'); return; }
+    state.profile = {name, phone};
+    state.view = 'menu';
+    await loadOrders();
+    render();
+  };
+}
+
+/* ===================== MENU ===================== */
+function renderMenu(){
+  return `
+    <div class="section-title">เมนูเครื่องดื่ม</div>
+    <div class="section-sub">กลั่นจากข้าวหอมมะลิสุรินทร์ · เลือกระดับความหวานได้เอง</div>
+    <div class="drink-grid">
+      ${DRINKS.map(d=>`
+        <div class="drink-card" data-open-drink="${d.id}">
+          <div class="drink-emoji">${d.emoji}</div>
+          <div class="drink-name">${d.name}</div>
+          <div class="drink-name-en">${d.en}</div>
+          <div class="drink-price">${priceRangeLabel(d)}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderDrinkSheet(drink){
+  const draft = drink._draft;
+  const circumference = 2*Math.PI*60;
+  const offset = circumference - (draft.sweet/100)*circumference;
+  const temps = Object.keys(drink.prices);
+  const total = drink.prices[draft.temp] * draft.qty;
+  return `
+  <div class="overlay" id="sheet-overlay">
+    <div class="sheet">
+      <div class="sheet-head">
         <div>
-          <p class="font-bold text-sm leading-tight">{{ profile.displayName || 'กำลังโหลดโปรไฟล์...' }}</p>
-          <p class="text-xs text-amber-200 mt-0.5">แต้มสะสม: {{ userPoints }} คะแนน</p>
+          <h2 style="font-size:18px;">${drink.emoji} ${drink.name}</h2>
+          <div class="drink-name-en">${drink.en}</div>
         </div>
+        <button class="close-x" id="close-sheet">✕</button>
       </div>
-      <span class="text-xs bg-amber-700 px-2.5 py-1 rounded-full font-semibold">ขั้นตอน {{ step }}/3</span>
+
+      ${temps.length>1 ? `
+      <div class="option-label">อุณหภูมิ</div>
+      <div class="pill-row">
+        ${temps.map(t=>`<button class="pill ${draft.temp===t?'selected':''}" data-temp="${t}">${t} · ${money(drink.prices[t])}฿</button>`).join('')}
+      </div>` : `
+      <div class="option-label">อุณหภูมิ</div>
+      <div class="pill-row"><span class="pill selected" style="cursor:default;">${temps[0]}</span></div>`}
+
+      <div class="option-label" style="text-align:center;">ระดับความหวาน</div>
+      <div class="dial-wrap">
+        <div class="dial">
+          <svg viewBox="0 0 140 140">
+            <circle class="dial-track" cx="70" cy="70" r="60"></circle>
+            <circle class="dial-fill" cx="70" cy="70" r="60" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
+          </svg>
+          <input type="range" min="0" max="100" step="25" value="${draft.sweet}" id="sweet-range">
+          <div class="dial-center">
+            <div class="val">${draft.sweet}%</div>
+            <div class="lbl">${SWEET_LABELS.find(s=>s[0]===draft.sweet)[1]}</div>
+          </div>
+        </div>
+        <div class="sweet-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      </div>
+
+      <div class="qty-row" style="justify-content:center;">
+        <button class="qty-btn" id="qty-minus">−</button>
+        <span class="qty-val">${draft.qty}</span>
+        <button class="qty-btn" id="qty-plus">+</button>
+      </div>
+
+      <div class="sheet-total">
+        <span style="font-size:13px;color:var(--jasmine-dim);">ยอดรวม</span>
+        <span class="amt">${money(total)} บาท</span>
+      </div>
+      <button class="primary-btn" id="add-to-cart" style="max-width:none;">เพิ่มลงตะกร้า</button>
+    </div>
+  </div>`;
+}
+function attachSheetEvents(){
+  const drink = state.modalDrink;
+  document.getElementById('close-sheet').onclick = ()=>{ state.modalDrink=null; render(); };
+  document.getElementById('sheet-overlay').onclick = (e)=>{ if(e.target.id==='sheet-overlay'){ state.modalDrink=null; render(); } };
+  document.querySelectorAll('[data-temp]').forEach(b=> b.onclick = ()=>{ drink._draft.temp=b.dataset.temp; render(); });
+  document.getElementById('qty-minus').onclick = ()=>{ drink._draft.qty=Math.max(1,drink._draft.qty-1); render(); };
+  document.getElementById('qty-plus').onclick = ()=>{ drink._draft.qty=drink._draft.qty+1; render(); };
+  document.getElementById('sweet-range').oninput = (e)=>{
+    const val = Number(e.target.value);
+    drink._draft.sweet = val;
+    const circumference = 2*Math.PI*60;
+    const offset = circumference - (val/100)*circumference;
+    document.querySelector('.dial-fill').setAttribute('stroke-dashoffset', offset);
+    document.querySelector('.dial-center .val').textContent = val + '%';
+    document.querySelector('.dial-center .lbl').textContent = SWEET_LABELS.find(s=>s[0]===val)[1];
+    document.querySelector('.sheet-total .amt').textContent =
+      money(drink.prices[drink._draft.temp] * drink._draft.qty) + ' บาท';
+  };
+  document.getElementById('add-to-cart').onclick = ()=>{
+    const d = drink._draft;
+    state.cart.push({
+      cid: uid(), drinkId: drink.id, name: drink.name, emoji: drink.emoji,
+      temp: d.temp, sweet: d.sweet, qty: d.qty,
+      unitPrice: drink.prices[d.temp]
+    });
+    state.modalDrink = null;
+    state.view = 'cart';
+    render();
+  };
+}
+
+/* ===================== ADDRESS ===================== */
+function renderAddress(){
+  return `
+    <div class="section-title">ที่อยู่จัดส่ง</div>
+    <div class="section-sub">ปักหมุดตำแหน่งของคุณบนแผนที่</div>
+    <div id="map"></div>
+    <div class="addr-hint">แตะบนแผนที่เพื่อวางหมุด จากนั้นตั้งชื่อที่อยู่และบันทึก</div>
+    <div id="pin-save-row" style="display:none; gap:8px; margin-top:10px;">
+      <input class="field" id="addr-label" placeholder="ตั้งชื่อ เช่น บ้าน, ที่ทำงาน" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid #4a3f2e;background:var(--surface);color:var(--jasmine);font-family:inherit;font-size:13px;">
+      <button class="primary-btn" id="save-pin" style="margin-top:8px;max-width:none;">📌 บันทึกหมุดนี้</button>
     </div>
 
-    <!-- ================= Step 1: เลือกรายการเครื่องดื่ม ================= -->
-    <div v-if="step === 1" class="p-4 space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">☕ เมนูเครื่องดื่ม</h2>
-      
-      <div v-for="menu in menuList" :key="menu.id" class="border rounded-xl p-3 shadow-sm flex justify-between items-center bg-white hover:border-amber-500 transition">
+    <div class="section-title" style="font-size:15px;margin-top:22px;">ที่อยู่ที่บันทึกไว้</div>
+    ${state.addresses.length===0 ? `<div class="addr-hint">ยังไม่มีที่อยู่ที่บันทึกไว้</div>` :
+      state.addresses.map(a=>`
+        <div class="addr-card ${state.selectedAddressId===a.id?'selected':''}" data-select-addr="${a.id}">
+          <div>
+            <div class="label">📍 ${escapeHtml(a.label)}</div>
+            <div class="detail">${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</div>
+          </div>
+          <span class="tag-btn">${state.selectedAddressId===a.id?'ค่าเริ่มต้น':'เลือก'}</span>
+        </div>`).join('')}
+  `;
+}
+function initMap(){
+  const mapEl = document.getElementById('map');
+  if(!mapEl) return;
+  const center = state.addresses[0] ? [state.addresses[0].lat, state.addresses[0].lng] : [14.8818, 103.4936]; // Surin, TH
+  mapInstance = L.map('map', {zoomControl:false}).setView(center, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(mapInstance);
+  L.control.zoom({position:'bottomright'}).addTo(mapInstance);
+  state.addresses.forEach(a=> L.marker([a.lat,a.lng]).addTo(mapInstance));
+  mapInstance.on('click', (e)=>{
+    state.pendingPin = {lat:e.latlng.lat, lng:e.latlng.lng};
+    if(mapMarker) mapInstance.removeLayer(mapMarker);
+    mapMarker = L.marker([e.latlng.lat,e.latlng.lng]).addTo(mapInstance);
+    document.getElementById('pin-save-row').style.display = 'flex';
+    document.getElementById('pin-save-row').style.flexDirection='column';
+  });
+  document.getElementById('save-pin')?.addEventListener('click', ()=>{
+    const label = document.getElementById('addr-label').value.trim() || 'ที่อยู่ใหม่';
+    if(!state.pendingPin) return;
+    const newAddr = {id:uid(), label, lat:state.pendingPin.lat, lng:state.pendingPin.lng};
+    state.addresses.push(newAddr);
+    if(!state.selectedAddressId) state.selectedAddressId = newAddr.id;
+    state.pendingPin = null;
+    render();
+  });
+}
+
+/* ===================== CART ===================== */
+function renderCart(){
+  if(state.cart.length===0){
+    return `<div class="empty-state"><div class="ee">🧺</div>ตะกร้าว่างเปล่า<br><span style="font-size:11px;">เลือกเมนูโปรดของคุณได้เลย</span></div>`;
+  }
+  const subtotal = state.cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
+  const deliveryFee = state.selectedAddressId ? 20 : 0;
+  const total = subtotal + deliveryFee;
+  const addr = state.addresses.find(a=>a.id===state.selectedAddressId);
+  return `
+    <div class="section-title">ตะกร้าของคุณ</div>
+    ${state.cart.map(i=>`
+      <div class="cart-item">
+        <div class="ci-emoji">${i.emoji}</div>
+        <div class="ci-info">
+          <div class="ci-name">${i.name} × ${i.qty}</div>
+          <div class="ci-meta">${i.temp} · หวาน ${i.sweet}%</div>
+          <button class="remove-link" data-remove="${i.cid}">ลบออก</button>
+        </div>
+        <div class="ci-price">${money(i.unitPrice*i.qty)}฿</div>
+      </div>`).join('')}
+
+    <div class="section-title" style="font-size:15px;margin-top:18px;">จัดส่งไปที่</div>
+    ${addr ? `<div class="addr-card selected"><div><div class="label">📍 ${escapeHtml(addr.label)}</div></div><span class="tag-btn" data-nav="address">เปลี่ยน</span></div>`
+           : `<div class="addr-card" data-nav="address"><div class="label">➕ เพิ่ม/เลือกที่อยู่จัดส่ง</div></div>`}
+
+    <div style="margin-top:20px;">
+      <div class="summary-row"><span>ยอดรวมสินค้า</span><span>${money(subtotal)}฿</span></div>
+      <div class="summary-row"><span>ค่าจัดส่ง</span><span>${deliveryFee?money(deliveryFee)+'฿':'—'}</span></div>
+      <div class="summary-row total"><span>ยอดชำระทั้งหมด</span><span>${money(total)}฿</span></div>
+    </div>
+    <button class="primary-btn" id="go-checkout" style="max-width:none;margin-top:14px;" ${!state.selectedAddressId?'disabled':''}>
+      ${state.selectedAddressId ? '💳 ชำระเงิน' : 'กรุณาเลือกที่อยู่ก่อน'}
+    </button>
+    ${state.checkoutSlip!==undefined && state.checkoutOpen ? renderCheckoutSheet(subtotal+deliveryFee) : ''}
+  `;
+}
+
+function renderCheckoutSheet(total){
+  return `
+  <div class="overlay" id="checkout-overlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h2 style="font-size:18px;">ชำระเงิน</h2>
+        <button class="close-x" id="close-checkout">✕</button>
+      </div>
+      <div class="qr-box">
+        <svg viewBox="0 0 100 100">${fakeQR()}</svg>
+        <div class="acc">PromptPay · Hommali Factory<br>บจก. โฮมมาลี แฟคทอรี่<br><b>ยอดชำระ ${money(total)} บาท</b></div>
+      </div>
+      <div class="upload-box" id="upload-box">
+        ${state.checkoutSlip ? `<img src="${state.checkoutSlip}">` : `<div class="up-icon">📎</div><p>แตะเพื่อแนบสลิปการโอนเงิน</p>`}
+      </div>
+      <input type="file" id="slip-input" accept="image/*" style="display:none;">
+      <button class="primary-btn" id="submit-order" style="max-width:none;margin-top:16px;" ${!state.checkoutSlip?'disabled':''}>
+        ✅ ยืนยันคำสั่งซื้อ
+      </button>
+    </div>
+  </div>`;
+}
+function fakeQR(){
+  let cells='';
+  let seed=42;
+  function rnd(){ seed=(seed*9301+49297)%233280; return seed/233280; }
+  for(let y=0;y<10;y++) for(let x=0;x<10;x++){
+    if(rnd()>0.5) cells+=`<rect x="${x*10}" y="${y*10}" width="9" height="9" fill="#111"/>`;
+  }
+  return cells + `<rect x="0" y="0" width="24" height="24" fill="none" stroke="#111" stroke-width="4"/><rect x="76" y="0" width="24" height="24" fill="none" stroke="#111" stroke-width="4"/><rect x="0" y="76" width="24" height="24" fill="none" stroke="#111" stroke-width="4"/>`;
+}
+
+/* ===================== ORDERS (customer) ===================== */
+function renderOrders(){
+  const mine = state.orders.filter(o=>o.memberPhone===state.profile.phone).sort((a,b)=>b.createdAt-a.createdAt);
+  if(mine.length===0){
+    return `<div class="empty-state"><div class="ee">🧾</div>ยังไม่มีคำสั่งซื้อ<br><span style="font-size:11px;">แจ้งเตือนสถานะจะขึ้นที่นี่</span></div>`;
+  }
+  return `<div class="section-title">ออเดอร์ของฉัน</div>` + mine.map(o=>renderOrderCard(o)).join('');
+}
+function renderOrderCard(o){
+  const idx = STAGES.findIndex(s=>s.k===o.status);
+  const stage = STAGES[idx];
+  return `
+  <div class="order-card">
+    <div class="order-head">
+      <div>
+        <div class="order-id">ออเดอร์ #${o.num}</div>
+        <div style="font-size:12px;color:var(--jasmine-dim);margin-top:2px;">${new Date(o.createdAt).toLocaleString('th-TH')}</div>
+      </div>
+      <div class="order-status-pill" style="background:${stage.color}33;color:${stage.color};">${stage.label}</div>
+    </div>
+    <div class="grain-track">
+      ${STAGES.map((s,i)=>`<span class="grain ${i<=idx?'filled':''}">🌾</span>`).join('')}
+    </div>
+    <div class="stage-label">ขั้นตอน ${idx+1}/${STAGES.length}</div>
+    <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${i.temp}, หวาน ${i.sweet}%)`).join('<br>')}</div>
+    <div class="summary-row total" style="margin-top:10px;"><span>รวม</span><span>${money(o.total)}฿</span></div>
+  </div>`;
+}
+
+/* ===================== ADMIN ===================== */
+function renderAdmin(){
+  const active = state.orders.filter(o=>o.status!=='completed').sort((a,b)=>a.createdAt-b.createdAt);
+  if(active.length===0){
+    return `<div class="empty-state"><div class="ee">☕</div>ยังไม่มีออเดอร์เข้ามา</div>`;
+  }
+  return `<div class="section-title">ออเดอร์ที่ต้องดำเนินการ</div>` + active.map(o=>{
+    const idx = STAGES.findIndex(s=>s.k===o.status);
+    const next = STAGES[idx+1];
+    return `
+    <div class="admin-order">
+      <div class="order-head">
         <div>
-          <h3 class="font-bold text-gray-800">{{ menu.name }}</h3>
-          <p class="text-amber-600 font-bold text-sm">฿{{ menu.price }}</p>
+          <div class="order-id">#${o.num} · ${escapeHtml(o.memberName)}</div>
+          <div style="font-size:11px;color:var(--jasmine-dim);margin-top:2px;">${o.memberPhone}</div>
         </div>
-        <button @click="openCustomModal(menu)" class="bg-amber-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-amber-700">
-          + เลือก
-        </button>
+        <div class="order-status-pill" style="background:${STAGES[idx].color}33;color:${STAGES[idx].color};">${STAGES[idx].label}</div>
       </div>
-
-      <!-- รายการในตะกร้า (ถ้ามี) -->
-      <div v-if="cart.length > 0" class="mt-6 border-t pt-4">
-        <h3 class="font-bold text-sm text-gray-600 mb-2">รายการที่เลือกแล้ว:</h3>
-        <div v-for="(item, index) in cart" :key="index" class="flex justify-between items-center text-sm bg-amber-50 p-2.5 rounded-lg mb-2">
-          <div>
-            <p class="font-bold text-gray-800">{{ item.name }} (หวาน {{ item.sweetness }})</p>
-            <p class="text-xs text-gray-500" v-if="item.toppings.length > 0">ท็อปปิ้ง: {{ item.toppings.join(', ') }}</p>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="font-bold text-amber-600">฿{{ item.price }}</span>
-            <button @click="removeFromCart(index)" class="text-red-500 text-xs font-bold">ลบ</button>
-          </div>
-        </div>
+      <div class="order-items" style="margin-top:8px;">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${i.temp}, หวาน ${i.sweet}%)`).join('<br>')}</div>
+      <div class="summary-row total"><span>ยอดชำระ</span><span>${money(o.total)}฿</span></div>
+      ${o.slip ? `<img class="slip-thumb" src="${o.slip}">` : ''}
+      <div class="admin-btn-row">
+        ${next ? `<button class="admin-btn" data-advance="${o.id}">✅ ${next.label}</button>` : ''}
+        <button class="admin-btn secondary" data-view-map="${o.addressId}">📍 ดูที่อยู่</button>
       </div>
+    </div>`;
+  }).join('');
+}
 
-      <!-- Modal สำหรับปรับแต่งความหวานและท็อปปิ้ง -->
-      <div v-if="selectedItem" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
-        <div class="bg-white w-full max-w-md rounded-t-2xl p-5 space-y-4">
-          <div class="flex justify-between items-center border-b pb-2">
-            <h3 class="font-bold text-lg text-gray-800">{{ selectedItem.name }}</h3>
-            <span class="text-amber-600 font-bold">฿{{ selectedItem.price }}</span>
-          </div>
-          
-          <!-- เลือกความหวาน -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">ระดับความหวาน:</label>
-            <div class="grid grid-cols-4 gap-2">
-              <button v-for="sweet in ['100%', '75%', '50%', '0%']" :key="sweet"
-                      @click="customOptions.sweetness = sweet"
-                      :class="customOptions.sweetness === sweet ? 'bg-amber-600 text-white font-bold' : 'bg-gray-100 text-gray-600'"
-                      class="py-2 rounded-lg text-xs transition">
-                {{ sweet }}
-              </button>
-            </div>
-          </div>
+/* ===================== GLOBAL EVENTS ===================== */
+function attachGlobalEvents(){
+  document.getElementById('toggle-admin').onclick = ()=>{ state.isAdmin = !state.isAdmin; render(); };
+  document.querySelectorAll('[data-nav]').forEach(b=> b.onclick = ()=>{ state.view = b.dataset.nav; render(); });
+  document.querySelectorAll('[data-open-drink]').forEach(b=> b.onclick = ()=>{
+    const d = DRINKS.find(x=>x.id===b.dataset.openDrink);
+    d._draft = {temp:Object.keys(d.prices)[0], sweet:50, qty:1};
+    state.modalDrink = d;
+    render();
+  });
+  document.querySelectorAll('[data-remove]').forEach(b=> b.onclick = ()=>{
+    state.cart = state.cart.filter(i=>i.cid!==b.dataset.remove);
+    render();
+  });
+  document.querySelectorAll('[data-select-addr]').forEach(b=> b.onclick = ()=>{
+    state.selectedAddressId = b.dataset.selectAddr;
+    render();
+  });
+  const checkoutBtn = document.getElementById('go-checkout');
+  if(checkoutBtn) checkoutBtn.onclick = ()=>{ state.checkoutOpen = true; state.checkoutSlip=null; render(); };
 
-          <!-- เลือกท็อปปิ้ง -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">ท็อปปิ้ง (+10฿/อย่าง):</label>
-            <div class="flex space-x-2">
-              <button v-for="top in ['ไข่มุก', 'พุดดิ้ง']" :key="top"
-                      @click="toggleTopping(top)"
-                      :class="customOptions.toppings.includes(top) ? 'bg-amber-600 text-white font-bold' : 'bg-gray-100 text-gray-600'"
-                      class="px-4 py-2 rounded-lg text-xs transition">
-                {{ top }}
-              </button>
-            </div>
-          </div>
+  const closeCheckout = document.getElementById('close-checkout');
+  if(closeCheckout) closeCheckout.onclick = ()=>{ state.checkoutOpen=false; render(); };
+  const co = document.getElementById('checkout-overlay');
+  if(co) co.onclick = (e)=>{ if(e.target.id==='checkout-overlay'){ state.checkoutOpen=false; render(); } };
 
-          <div class="flex space-x-2 pt-4">
-            <button @click="selectedItem = null" class="w-1/2 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-bold text-sm">ยกเลิก</button>
-            <button @click="addToCart" class="w-1/2 py-2.5 bg-amber-600 text-white rounded-xl font-bold text-sm hover:bg-amber-700">ใส่ตะกร้า</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  const uploadBox = document.getElementById('upload-box');
+  if(uploadBox) uploadBox.onclick = ()=> document.getElementById('slip-input').click();
+  const slipInput = document.getElementById('slip-input');
+  if(slipInput) slipInput.onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ state.checkoutSlip = reader.result; render(); };
+    reader.readAsDataURL(file);
+  };
+  const submitOrder = document.getElementById('submit-order');
+  if(submitOrder) submitOrder.onclick = async ()=>{
+    const subtotal = state.cart.reduce((s,i)=>s+i.unitPrice*i.qty,0) + 20;
+    orderCounter++;
+    const order = {
+      id: uid(), num: orderCounter,
+      memberName: state.profile.name, memberPhone: state.profile.phone,
+      addressId: state.selectedAddressId,
+      items: state.cart, total: subtotal,
+      slip: state.checkoutSlip, status: 'slip_review', createdAt: Date.now()
+    };
+    state.orders.push(order);
+    await saveOrders();
+    state.cart = [];
+    state.checkoutOpen = false;
+    state.checkoutSlip = null;
+    state.view = 'orders';
+    render();
+    showToast('Hommali Factory', `รับคำสั่งซื้อ #${order.num} แล้ว กำลังตรวจสอบสลิปการโอนเงิน`);
+  };
 
-    <!-- ================= Step 2: เลือกสถานที่จัดส่ง ================= -->
-    <div v-if="step === 2" class="p-4 space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📍 สถานที่จัดส่ง</h2>
-      
-      <button @click="getGPSLocation" class="w-full bg-blue-50 text-blue-600 py-3 rounded-xl border border-blue-200 font-bold text-sm flex items-center justify-center space-x-2">
-        <span>📍 ดึงพิกัดปัจจุบันผ่าน GPS</span>
-      </button>
+  document.querySelectorAll('[data-advance]').forEach(b=> b.onclick = async ()=>{
+    const order = state.orders.find(o=>o.id===b.dataset.advance);
+    const idx = STAGES.findIndex(s=>s.k===order.status);
+    if(idx < STAGES.length-1){
+      order.status = STAGES[idx+1].k;
+      await saveOrders();
+      render();
+      showToast('แจ้งเตือนถึงลูกค้า (LINE)', `ออเดอร์ #${order.num}: ${STAGES[idx+1].label}`);
+    }
+  });
+  document.querySelectorAll('[data-view-map]').forEach(b=> b.onclick = ()=>{
+    const addr = state.addresses.find(a=>a.id===b.dataset.viewMap);
+    if(addr) alert(`พิกัดจัดส่ง: ${addr.lat.toFixed(5)}, ${addr.lng.toFixed(5)}\n(${addr.label})`);
+    else alert('ไม่พบข้อมูลที่อยู่');
+  });
+}
 
-      <div v-if="deliveryAddress.lat" class="text-xs text-green-600 font-semibold bg-green-50 p-2 rounded-lg">
-        ✓ ได้รับพิกัดแล้ว (Lat: {{ deliveryAddress.lat.toFixed(4) }}, Lng: {{ deliveryAddress.lng.toFixed(4) }})
-      </div>
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">รายละเอียดที่อยู่ / จุดสังเกต:</label>
-        <textarea v-model="deliveryAddress.text" rows="3" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="ระบุบ้านเลขที่, ชื่อตึก, ชั้น หรือจุดสังเกตสำหรับคนส่ง..."></textarea>
-      </div>
-    </div>
-
-    <!-- ================= Step 3: ชำระเงิน & แนนสลิป ================= -->
-    <div v-if="step === 3" class="p-4 space-y-4 text-center">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2 text-left">💳 ชำระเงิน</h2>
-      
-      <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
-        <p class="text-xs text-gray-500">ยอดชำระเงินทั้งหมด</p>
-        <p class="text-3xl font-extrabold text-amber-600 mt-1">฿{{ totalAmount }}</p>
-      </div>
-
-      <!-- PromptPay Dynamic QR Code -->
-      <!-- หมายเหตุ: เปลี่ยน 0812345678 เป็นเบอร์พร้อมเพย์ หรือ เลขประจำตัวผู้เสียภาษีของร้าน -->
-      <div class="bg-white p-4 rounded-xl border shadow-sm inline-block">
-        <img :src="'https://promptpay.io/0812345678/' + totalAmount + '.png'" class="w-48 h-48 mx-auto border p-1 rounded">
-        <p class="text-xs text-gray-400 mt-2">สแกนจ่ายผ่านแอปธนาคารใดก็ได้</p>
-      </div>
-
-      <!-- ช่องอัปโหลดไฟล์สลิป -->
-      <div class="text-left space-y-1">
-        <label class="block text-sm font-semibold text-gray-700">อัปโหลดสลิปโอนเงินเพื่อยืนยัน:</label>
-        <input type="file" @change="handleFileUpload" accept="image/*" class="w-full text-sm text-gray-500 border rounded-xl p-2 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
-      </div>
-    </div>
-
-    <!-- ================= Bottom Navigation Bar (แถบปุ่มล่างสุด) ================= -->
-    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t p-3 flex justify-between items-center shadow-lg z-30">
-      <div>
-        <p class="text-xs text-gray-400">ราคารวม</p>
-        <p class="font-extrabold text-lg text-amber-600">฿{{ totalAmount }}</p>
-      </div>
-
-      <!-- ปุ่มเปลี่ยนไป Step ต่างๆ -->
-      <button v-if="step === 1" @click="step = 2" :disabled="cart.length === 0" 
-              :class="cart.length > 0 ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-300'" 
-              class="text-white px-6 py-2.5 rounded-xl font-bold text-sm transition">
-        ไปหน้าเลือกที่อยู่ ->
-      </button>
-
-      <button v-if="step === 2" @click="step = 3" :disabled="!deliveryAddress.text" 
-              :class="deliveryAddress.text ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-300'" 
-              class="text-white px-6 py-2.5 rounded-xl font-bold text-sm transition">
-        ไปหน้าชำระเงิน ->
-      </button>
-
-      <button v-if="step === 3" @click="submitOrder" :disabled="!slipFile || isSubmitting" 
-              :class="slipFile && !isSubmitting ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300'" 
-              class="text-white px-6 py-2.5 rounded-xl font-bold text-sm transition">
-        {{ isSubmitting ? 'กำลังส่งข้อมูล...' : 'ยืนยันสั่งซื้อ' }}
-      </button>
-    </div>
-
-  </div>
-
-  <!-- Script การทำงานของ Frontend -->
-  <script>
-    const { createApp, ref, computed, onMounted } = Vue;
-
-    createApp({
-      setup() {
-        const step = ref(1);
-        const profile = ref({});
-        const userPoints = ref(0);
-        const cart = ref([]);
-        
-        // เมนูตัวอย่าง (ในอนาคตดึงจาก Database ได้)
-        const menuList = ref([
-          { id: 1, name: 'ชาไทยเย็น', price: 45 },
-          { id: 2, name: 'อเมริกาโน่เย็น', price: 50 },
-          { id: 3, name: 'นมสดสตรอว์เบอร์รี', price: 55 }
-        ]);
-        
-        const selectedItem = ref(null);
-        const customOptions = ref({ sweetness: '100%', toppings: [] });
-        const deliveryAddress = ref({ text: '', lat: null, lng: null });
-        const slipFile = ref(null);
-        const isSubmitting = ref(false);
-
-        // 1. เชื่อมต่อ LINE LIFF เมื่อโหลดหน้าเว็บขึ้นมา
-        onMounted(async () => {
-          try {
-            // *** นำ LIFF ID ที่ได้จาก LINE Developers มาใส่ตรงนี้ ***
-            await liff.init({ liffId: '1657891234-AbCdEfGh' });
-            
-            if (liff.isLoggedIn()) {
-              // ดึงข้อมูลโปรไฟล์ LINE ของคนที่เปิดแอป
-              profile.value = await liff.getProfile();
-            } else {
-              liff.login(); // ถ้ายังไม่ได้ล็อกอิน ให้เด้งไปหน้า Login
-            }
-          } catch (err) {
-            console.error('LIFF Init Error:', err);
-          }
-        });
-
-        const openCustomModal = (item) => {
-          selectedItem.value = item;
-          customOptions.value = { sweetness: '100%', toppings: [] };
-        };
-
-        const toggleTopping = (top) => {
-          const idx = customOptions.value.toppings.indexOf(top);
-          if (idx > -1) customOptions.value.toppings.splice(idx, 1);
-          else customOptions.value.toppings.push(top);
-        };
-
-        const addToCart = () => {
-          const toppingPrice = customOptions.value.toppings.length * 10;
-          cart.value.push({
-            name: selectedItem.value.name,
-            price: selectedItem.value.price + toppingPrice,
-            sweetness: customOptions.value.sweetness,
-            toppings: [...customOptions.value.toppings]
-          });
-          selectedItem.value = null;
-        };
-
-        const removeFromCart = (index) => {
-          cart.value.splice(index, 1);
-        };
-
-        const totalAmount = computed(() => {
-          return cart.value.reduce((sum, item) => sum + item.price, 0);
-        });
-
-        const getGPSLocation = () => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (pos) => {
-                deliveryAddress.value.lat = pos.coords.latitude;
-                deliveryAddress.value.lng = pos.coords.longitude;
-              },
-              (err) => alert('ไม่สามารถดึงตำแหน่งได้ กรุณากรอกที่อยู่ด้วยตนเอง')
-            );
-          }
-        };
-
-        const handleFileUpload = (e) => {
-          slipFile.value = e.target.files[0];
-        };
-
-        // ส่งออเดอร์ไปให้ Backend Server
-        const submitOrder = async () => {
-          isSubmitting.value = true;
-          
-          const formData = new FormData();
-          formData.append('lineUserId', profile.value.userId);
-          formData.append('items', JSON.stringify(cart.value));
-          formData.append('totalAmount', totalAmount.value);
-          formData.append('address', JSON.stringify(deliveryAddress.value));
-          formData.append('slip', slipFile.value);
-
-          try {
-            // *** ใส่ URL Server หลังบ้านของคุณตรงนี้ ***
-            const res = await fetch('https://your-backend-api.com/api/orders', {
-              method: 'POST',
-              body: formData
-            });
-            const result = await res.json();
-            
-            if (result.success) {
-              alert('สั่งซื้อสำเร็จ! ร้านได้รับออเดอร์เรียบร้อยครับ');
-              liff.closeWindow(); // ปิดหน้าต่าง LIFF อัตโนมัติ
-            } else {
-              alert('เกิดข้อผิดพลาด: ' + result.message);
-            }
-          } catch (err) {
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-          } finally {
-            isSubmitting.value = false;
-          }
-        };
-
-        return {
-          step, profile, userPoints, menuList, selectedItem, customOptions,
-          cart, totalAmount, deliveryAddress, slipFile, isSubmitting,
-          openCustomModal, toggleTopping, addToCart, removeFromCart, getGPSLocation, handleFileUpload, submitOrder
-        };
-      }
-    }).mount('#app');
-  </script>
+render();
+</script>
 </body>
 </html>
