@@ -132,19 +132,19 @@
   }
   .pill.selected{background:var(--paddy);border-color:var(--paddy);color:#1a1f10;font-weight:700;}
 
-  /* sweetness dial (signature element) */
-  .dial-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:6px;}
-  .dial{position:relative;width:150px;height:150px;}
-  .dial svg{width:100%;height:100%;transform:rotate(-90deg);}
-  .dial-track{fill:none;stroke:#4a3f2e;stroke-width:10;}
-  .dial-fill{fill:none;stroke:var(--gold);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .15s;}
-  .dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-  .dial-center .val{font-size:26px;font-weight:700;color:var(--gold);font-family:'Noto Serif Thai',serif;}
-  .dial-center .lbl{font-size:11px;color:var(--jasmine-dim);margin-top:2px;}
-  .dial input[type=range]{
-    position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;
+  /* sweetness dropdown */
+  .select-box{position:relative;width:100%;}
+  .select-box select{
+    width:100%; appearance:none; -webkit-appearance:none;
+    background:var(--surface); border:1px solid #4a3f2e; border-radius:var(--radius-sm);
+    color:var(--jasmine); font-family:inherit; font-size:15px; font-weight:600;
+    padding:13px 40px 13px 14px; cursor:pointer;
   }
-  .sweet-ticks{display:flex;justify-content:space-between;width:150px;font-size:9px;color:var(--jasmine-dim);}
+  .select-box::after{
+    content:'▾'; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    color:var(--gold); font-size:14px; pointer-events:none;
+  }
+  .select-box select:focus{outline:2px solid var(--gold);}
 
   .qty-row{display:flex;align-items:center;gap:16px;margin-top:16px;}
   .qty-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid #4a3f2e;color:var(--jasmine);font-size:16px;cursor:pointer;}
@@ -267,7 +267,8 @@ const DRINKS = [
   {id:'d8', name:'เอสเพรสโซ่โทนิคข้าว', en:'Rice Espresso Tonic', emoji:'🥃', prices:{'เย็น':85},
     roasts:['กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
 ];
-const SWEET_LABELS = [[0,'ไม่หวาน'],[25,'หวานน้อย'],[50,'หวานปกติ'],[75,'หวานมาก'],[100,'หวานเต็ม']];
+const SWEET_OPTIONS = ['0%','25%','50%','75%','100%','100+%'];
+const TIME_SLOTS = ['10:00','11:00','12:00','13:00','14:00','15:00'];
 const STAGES = [
   {k:'slip_review', label:'รอตรวจสอบสลิป', color:'#cda24d'},
   {k:'confirmed', label:'ยืนยันชำระเงินแล้ว', color:'#8a9a5f'},
@@ -283,6 +284,7 @@ let state = {
   isAdmin: false,
   addresses: [],
   selectedAddressId: null,
+  selectedTimeSlot: null,
   cart: [],
   orders: [],
   modalDrink: null,       // drink customization sheet
@@ -320,7 +322,7 @@ function itemOptionsLabel(i){
   const parts = [i.temp];
   if(i.roast) parts.push(`คั่ว${i.roast}`);
   if(i.bean) parts.push(i.bean);
-  parts.push(`หวาน ${i.sweet}%`);
+  parts.push(`หวาน ${i.sweet}`);
   return parts.join(' · ');
 }
 function showToast(title, body){
@@ -438,8 +440,6 @@ function renderMenu(){
 
 function renderDrinkSheet(drink){
   const draft = drink._draft;
-  const circumference = 2*Math.PI*60;
-  const offset = circumference - (draft.sweet/100)*circumference;
   const temps = Object.keys(drink.prices);
   const total = unitPrice(drink, draft) * draft.qty;
   return `
@@ -473,20 +473,11 @@ function renderDrinkSheet(drink){
         ${Object.keys(drink.beans).map(bn=>`<button class="pill ${draft.bean===bn?'selected':''}" data-bean="${bn}">${bn}${drink.beans[bn]?` +${drink.beans[bn]}฿`:''}</button>`).join('')}
       </div>` : ''}
 
-      <div class="option-label" style="text-align:center;">ระดับความหวาน</div>
-      <div class="dial-wrap">
-        <div class="dial">
-          <svg viewBox="0 0 140 140">
-            <circle class="dial-track" cx="70" cy="70" r="60"></circle>
-            <circle class="dial-fill" cx="70" cy="70" r="60" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
-          </svg>
-          <input type="range" min="0" max="100" step="25" value="${draft.sweet}" id="sweet-range">
-          <div class="dial-center">
-            <div class="val">${draft.sweet}%</div>
-            <div class="lbl">${SWEET_LABELS.find(s=>s[0]===draft.sweet)[1]}</div>
-          </div>
-        </div>
-        <div class="sweet-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      <div class="option-label">ระดับความหวาน</div>
+      <div class="select-box">
+        <select id="sweet-select">
+          ${SWEET_OPTIONS.map(s=>`<option value="${s}" ${draft.sweet===s?'selected':''}>${s}</option>`).join('')}
+        </select>
       </div>
 
       <div class="qty-row" style="justify-content:center;">
@@ -512,18 +503,8 @@ function attachSheetEvents(){
   document.querySelectorAll('[data-bean]').forEach(b=> b.onclick = ()=>{ drink._draft.bean=b.dataset.bean; render(); });
   document.getElementById('qty-minus').onclick = ()=>{ drink._draft.qty=Math.max(1,drink._draft.qty-1); render(); };
   document.getElementById('qty-plus').onclick = ()=>{ drink._draft.qty=drink._draft.qty+1; render(); };
-  document.getElementById('sweet-range').oninput = (e)=>{
-    const val = Number(e.target.value);
-    drink._draft.sweet = val;
-    // update the dial visuals directly instead of a full re-render,
-    // so dragging on touch devices doesn't get interrupted mid-gesture
-    const circumference = 2*Math.PI*60;
-    const offset = circumference - (val/100)*circumference;
-    document.querySelector('.dial-fill').setAttribute('stroke-dashoffset', offset);
-    document.querySelector('.dial-center .val').textContent = val + '%';
-    document.querySelector('.dial-center .lbl').textContent = SWEET_LABELS.find(s=>s[0]===val)[1];
-    document.querySelector('.sheet-total .amt').textContent =
-      money(unitPrice(drink, drink._draft) * drink._draft.qty) + ' บาท';
+  document.getElementById('sweet-select').onchange = (e)=>{
+    drink._draft.sweet = e.target.value;
   };
   document.getElementById('add-to-cart').onclick = ()=>{
     const d = drink._draft;
@@ -542,12 +523,15 @@ function attachSheetEvents(){
 function renderAddress(){
   return `
     <div class="section-title">ที่อยู่จัดส่ง</div>
-    <div class="section-sub">ปักหมุดตำแหน่งของคุณบนแผนที่</div>
+    <div class="section-sub">ระบุตำแหน่งที่แน่นอนสำหรับจัดส่ง — ใช้ GPS หรือแตะปักหมุดเองบนแผนที่</div>
+    <button class="primary-btn" id="use-gps" style="max-width:none;">📡 ใช้ตำแหน่งปัจจุบัน (GPS)</button>
     <div id="map"></div>
-    <div class="addr-hint">แตะบนแผนที่เพื่อวางหมุด จากนั้นตั้งชื่อที่อยู่และบันทึก</div>
-    <div id="pin-save-row" style="display:none; gap:8px; margin-top:10px;">
+    <div class="addr-hint">แตะบนแผนที่เพื่อวางหมุดตำแหน่งที่แน่นอน จากนั้นกรอกรายละเอียดที่อยู่และบันทึก</div>
+    <div id="pin-save-row" style="display:none; gap:8px; margin-top:10px; flex-direction:column;">
       <input class="field" id="addr-label" placeholder="ตั้งชื่อ เช่น บ้าน, ที่ทำงาน" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid #4a3f2e;background:var(--surface);color:var(--jasmine);font-family:inherit;font-size:13px;">
-      <button class="primary-btn" id="save-pin" style="margin-top:8px;max-width:none;">📌 บันทึกหมุดนี้</button>
+      <input class="field" id="addr-detail" placeholder="รายละเอียดที่อยู่ เช่น บ้านเลขที่, ถนน, ตำบล, อำเภอ" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid #4a3f2e;background:var(--surface);color:var(--jasmine);font-family:inherit;font-size:13px;">
+      <div id="pin-coords" class="addr-hint" style="margin-top:0;"></div>
+      <button class="primary-btn" id="save-pin" style="margin-top:8px;max-width:none;">📌 บันทึกตำแหน่งนี้</button>
     </div>
 
     <div class="section-title" style="font-size:15px;margin-top:22px;">ที่อยู่ที่บันทึกไว้</div>
@@ -556,7 +540,8 @@ function renderAddress(){
         <div class="addr-card ${state.selectedAddressId===a.id?'selected':''}" data-select-addr="${a.id}">
           <div>
             <div class="label">📍 ${escapeHtml(a.label)}</div>
-            <div class="detail">${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</div>
+            <div class="detail">${escapeHtml(a.detail || '')}</div>
+            <div class="detail">พิกัดแน่นอน: ${a.lat.toFixed(6)}, ${a.lng.toFixed(6)}</div>
           </div>
           <span class="tag-btn">${state.selectedAddressId===a.id?'ค่าเริ่มต้น':'เลือก'}</span>
         </div>`).join('')}
@@ -570,17 +555,40 @@ function initMap(){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   state.addresses.forEach(a=> L.marker([a.lat,a.lng]).addTo(mapInstance));
-  mapInstance.on('click', (e)=>{
-    state.pendingPin = {lat:e.latlng.lat, lng:e.latlng.lng};
+
+  function dropPinAt(lat, lng, zoom){
+    state.pendingPin = {lat, lng};
     if(mapMarker) mapInstance.removeLayer(mapMarker);
-    mapMarker = L.marker([e.latlng.lat,e.latlng.lng]).addTo(mapInstance);
+    mapMarker = L.marker([lat,lng]).addTo(mapInstance);
+    mapInstance.setView([lat,lng], zoom || mapInstance.getZoom());
     document.getElementById('pin-save-row').style.display = 'flex';
-    document.getElementById('pin-save-row').style.flexDirection='column';
+    document.getElementById('pin-coords').textContent = `ตำแหน่งที่เลือก: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  }
+
+  mapInstance.on('click', (e)=> dropPinAt(e.latlng.lat, e.latlng.lng));
+
+  document.getElementById('use-gps')?.addEventListener('click', ()=>{
+    if(!navigator.geolocation){ alert('อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง GPS'); return; }
+    const btn = document.getElementById('use-gps');
+    btn.textContent = '📡 กำลังค้นหาตำแหน่ง...';
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        btn.textContent = '📡 ใช้ตำแหน่งปัจจุบัน (GPS)';
+        dropPinAt(pos.coords.latitude, pos.coords.longitude, 17);
+      },
+      (err)=>{
+        btn.textContent = '📡 ใช้ตำแหน่งปัจจุบัน (GPS)';
+        alert('ไม่สามารถระบุตำแหน่งได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง หรือปักหมุดเองบนแผนที่');
+      },
+      {enableHighAccuracy:true, timeout:10000}
+    );
   });
+
   document.getElementById('save-pin')?.addEventListener('click', ()=>{
     const label = document.getElementById('addr-label').value.trim() || 'ที่อยู่ใหม่';
+    const detail = document.getElementById('addr-detail').value.trim();
     if(!state.pendingPin) return;
-    const newAddr = {id:uid(), label, lat:state.pendingPin.lat, lng:state.pendingPin.lng};
+    const newAddr = {id:uid(), label, detail, lat:state.pendingPin.lat, lng:state.pendingPin.lng};
     state.addresses.push(newAddr);
     if(!state.selectedAddressId) state.selectedAddressId = newAddr.id;
     state.pendingPin = null;
@@ -614,13 +622,18 @@ function renderCart(){
     ${addr ? `<div class="addr-card selected"><div><div class="label">📍 ${escapeHtml(addr.label)}</div></div><span class="tag-btn" data-nav="address">เปลี่ยน</span></div>`
            : `<div class="addr-card" data-nav="address"><div class="label">➕ เพิ่ม/เลือกที่อยู่จัดส่ง</div></div>`}
 
+    <div class="section-title" style="font-size:15px;margin-top:18px;">รอบจัดส่ง</div>
+    <div class="pill-row">
+      ${TIME_SLOTS.map(t=>`<button class="pill ${state.selectedTimeSlot===t?'selected':''}" data-timeslot="${t}">${t} น.</button>`).join('')}
+    </div>
+
     <div style="margin-top:20px;">
       <div class="summary-row"><span>ยอดรวมสินค้า</span><span>${money(subtotal)}฿</span></div>
       <div class="summary-row"><span>ค่าจัดส่ง</span><span>${deliveryFee?money(deliveryFee)+'฿':'—'}</span></div>
       <div class="summary-row total"><span>ยอดชำระทั้งหมด</span><span>${money(total)}฿</span></div>
     </div>
-    <button class="primary-btn" id="go-checkout" style="max-width:none;margin-top:14px;" ${!state.selectedAddressId?'disabled':''}>
-      ${state.selectedAddressId ? '💳 ชำระเงิน' : 'กรุณาเลือกที่อยู่ก่อน'}
+    <button class="primary-btn" id="go-checkout" style="max-width:none;margin-top:14px;" ${(!state.selectedAddressId || !state.selectedTimeSlot)?'disabled':''}>
+      ${!state.selectedAddressId ? 'กรุณาเลือกที่อยู่ก่อน' : !state.selectedTimeSlot ? 'กรุณาเลือกรอบจัดส่ง' : '💳 ชำระเงิน'}
     </button>
     ${state.checkoutSlip!==undefined && state.checkoutOpen ? renderCheckoutSheet(subtotal+deliveryFee) : ''}
   `;
@@ -683,7 +696,7 @@ function renderOrderCard(o){
       ${STAGES.map((s,i)=>`<span class="grain ${i<=idx?'filled':''}">🌾</span>`).join('')}
     </div>
     <div class="stage-label">ขั้นตอน ${idx+1}/${STAGES.length}</div>
-    <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${itemOptionsLabel(i)})`).join('<br>')}</div>
+    <div class="order-items">🕐 รอบจัดส่ง ${o.timeSlot||'-'} น.<br>${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${itemOptionsLabel(i)})`).join('<br>')}</div>
     <div class="summary-row total" style="margin-top:10px;"><span>รวม</span><span>${money(o.total)}฿</span></div>
   </div>`;
 }
@@ -706,7 +719,7 @@ function renderAdmin(){
         </div>
         <div class="order-status-pill" style="background:${STAGES[idx].color}33;color:${STAGES[idx].color};">${STAGES[idx].label}</div>
       </div>
-      <div class="order-items" style="margin-top:8px;">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${itemOptionsLabel(i)})`).join('<br>')}</div>
+      <div class="order-items" style="margin-top:8px;">🕐 รอบจัดส่ง ${o.timeSlot||'-'} น.<br>${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${itemOptionsLabel(i)})`).join('<br>')}</div>
       <div class="summary-row total"><span>ยอดชำระ</span><span>${money(o.total)}฿</span></div>
       ${o.slip ? `<img class="slip-thumb" src="${o.slip}">` : ''}
       <div class="admin-btn-row">
@@ -727,7 +740,7 @@ function attachGlobalEvents(){
       temp:Object.keys(d.prices)[0],
       roast: d.roasts ? d.roasts[0] : undefined,
       bean: d.beans ? Object.keys(d.beans)[0] : undefined,
-      sweet:50, qty:1
+      sweet:'50%', qty:1
     };
     state.modalDrink = d;
     render();
@@ -738,6 +751,10 @@ function attachGlobalEvents(){
   });
   document.querySelectorAll('[data-select-addr]').forEach(b=> b.onclick = ()=>{
     state.selectedAddressId = b.dataset.selectAddr;
+    render();
+  });
+  document.querySelectorAll('[data-timeslot]').forEach(b=> b.onclick = ()=>{
+    state.selectedTimeSlot = b.dataset.timeslot;
     render();
   });
   const checkoutBtn = document.getElementById('go-checkout');
@@ -765,7 +782,7 @@ function attachGlobalEvents(){
     const order = {
       id: uid(), num: orderCounter,
       memberName: state.profile.name, memberPhone: state.profile.phone,
-      addressId: state.selectedAddressId,
+      addressId: state.selectedAddressId, timeSlot: state.selectedTimeSlot,
       items: state.cart, total: subtotal,
       slip: state.checkoutSlip, status: 'slip_review', createdAt: Date.now()
     };
@@ -774,6 +791,7 @@ function attachGlobalEvents(){
     state.cart = [];
     state.checkoutOpen = false;
     state.checkoutSlip = null;
+    state.selectedTimeSlot = null;
     state.view = 'orders';
     render();
     showToast('Hommali Factory', `รับคำสั่งซื้อ #${order.num} แล้ว กำลังตรวจสอบสลิปการโอนเงิน`);
@@ -791,7 +809,7 @@ function attachGlobalEvents(){
   });
   document.querySelectorAll('[data-view-map]').forEach(b=> b.onclick = ()=>{
     const addr = state.addresses.find(a=>a.id===b.dataset.viewMap);
-    if(addr) alert(`พิกัดจัดส่ง: ${addr.lat.toFixed(5)}, ${addr.lng.toFixed(5)}\n(${addr.label})`);
+    if(addr) alert(`${addr.label}\n${addr.detail || ''}\nพิกัดแน่นอน: ${addr.lat.toFixed(6)}, ${addr.lng.toFixed(6)}`);
     else alert('ไม่พบข้อมูลที่อยู่');
   });
 }
