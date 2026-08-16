@@ -249,15 +249,23 @@
 /* ===================== DATA ===================== */
 // prices is keyed by temperature — one price per ร้อน/เย็น option a drink offers.
 // Drinks with only one key (e.g. เย็น only) are single-temp and skip the temp picker.
+// roasts / beans are OPTIONAL and only apply to coffee-based drinks:
+//   roasts: array of roast levels, no price change, e.g. ['อ่อน','กลาง','เข้ม']
+//   beans:  object of bean choice -> price add-on, e.g. {'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}
+// Drinks without `roasts`/`beans` simply won't show those pickers (e.g. matcha, ชาไทย).
 const DRINKS = [
-  {id:'d1', name:'จัสมินไรซ์ลาเต้', en:'Jasmine Rice Latte', emoji:'🍚', prices:{'ร้อน':75,'เย็น':85}},
+  {id:'d1', name:'จัสมินไรซ์ลาเต้', en:'Jasmine Rice Latte', emoji:'🍚', prices:{'ร้อน':75,'เย็น':85},
+    roasts:['อ่อน','กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
   {id:'d2', name:'ข้าวคั่วโฮจิฉะลาเต้', en:'Roasted Rice Houjicha', emoji:'🍵', prices:{'ร้อน':85,'เย็น':95}},
   {id:'d3', name:'มัทฉะข้าวหอมมะลิ', en:'Jasmine Rice Matcha', emoji:'🍃', prices:{'ร้อน':85,'เย็น':95}},
-  {id:'d4', name:'อเมริกาโนข้าวหอม', en:'Rice-Infused Americano', emoji:'☕', prices:{'ร้อน':55,'เย็น':65}},
-  {id:'d5', name:'คาปูชิโนข้าวคั่ว', en:'Toasted Rice Cappuccino', emoji:'🫘', prices:{'ร้อน':80}},
+  {id:'d4', name:'อเมริกาโนข้าวหอม', en:'Rice-Infused Americano', emoji:'☕', prices:{'ร้อน':55,'เย็น':65},
+    roasts:['อ่อน','กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
+  {id:'d5', name:'คาปูชิโนข้าวคั่ว', en:'Toasted Rice Cappuccino', emoji:'🫘', prices:{'ร้อน':80},
+    roasts:['กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
   {id:'d6', name:'ชาไทยข้าวหอมมะลิ', en:'Jasmine Rice Thai Tea', emoji:'🧋', prices:{'ร้อน':60,'เย็น':70}},
   {id:'d7', name:'น้ำข้าวหอมมะลิเย็น', en:'Cold Jasmine Rice Milk', emoji:'🥛', prices:{'เย็น':60}},
-  {id:'d8', name:'เอสเพรสโซ่โทนิคข้าว', en:'Rice Espresso Tonic', emoji:'🥃', prices:{'เย็น':85}},
+  {id:'d8', name:'เอสเพรสโซ่โทนิคข้าว', en:'Rice Espresso Tonic', emoji:'🥃', prices:{'เย็น':85},
+    roasts:['กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
 ];
 const SWEET_LABELS = [[0,'ไม่หวาน'],[25,'หวานน้อย'],[50,'หวานปกติ'],[75,'หวานมาก'],[100,'หวานเต็ม']];
 const STAGES = [
@@ -300,10 +308,21 @@ async function saveOrders(){
 function money(n){ return n.toLocaleString('th-TH',{minimumFractionDigits:0}); }
 function priceRangeLabel(d){
   const vals = Object.values(d.prices);
-  const min = Math.min(...vals), max = Math.max(...vals);
+  const beanAdd = d.beans ? Math.max(...Object.values(d.beans)) : 0;
+  const min = Math.min(...vals), max = Math.max(...vals) + beanAdd;
   return min===max ? `${money(min)} บาท` : `${money(min)}–${money(max)} บาท`;
 }
 function uid(){ return Math.random().toString(36).slice(2,9); }
+function unitPrice(drink, draft){
+  return drink.prices[draft.temp] + (drink.beans ? drink.beans[draft.bean] : 0);
+}
+function itemOptionsLabel(i){
+  const parts = [i.temp];
+  if(i.roast) parts.push(`คั่ว${i.roast}`);
+  if(i.bean) parts.push(i.bean);
+  parts.push(`หวาน ${i.sweet}%`);
+  return parts.join(' · ');
+}
 function showToast(title, body){
   const layer = document.getElementById('toast-layer');
   const t = document.createElement('div');
@@ -422,7 +441,7 @@ function renderDrinkSheet(drink){
   const circumference = 2*Math.PI*60;
   const offset = circumference - (draft.sweet/100)*circumference;
   const temps = Object.keys(drink.prices);
-  const total = drink.prices[draft.temp] * draft.qty;
+  const total = unitPrice(drink, draft) * draft.qty;
   return `
   <div class="overlay" id="sheet-overlay">
     <div class="sheet">
@@ -441,6 +460,18 @@ function renderDrinkSheet(drink){
       </div>` : `
       <div class="option-label">อุณหภูมิ</div>
       <div class="pill-row"><span class="pill selected" style="cursor:default;">${temps[0]}</span></div>`}
+
+      ${drink.roasts ? `
+      <div class="option-label">ระดับการคั่ว</div>
+      <div class="pill-row">
+        ${drink.roasts.map(r=>`<button class="pill ${draft.roast===r?'selected':''}" data-roast="${r}">${r}</button>`).join('')}
+      </div>` : ''}
+
+      ${drink.beans ? `
+      <div class="option-label">เมล็ดกาแฟ</div>
+      <div class="pill-row">
+        ${Object.keys(drink.beans).map(bn=>`<button class="pill ${draft.bean===bn?'selected':''}" data-bean="${bn}">${bn}${drink.beans[bn]?` +${drink.beans[bn]}฿`:''}</button>`).join('')}
+      </div>` : ''}
 
       <div class="option-label" style="text-align:center;">ระดับความหวาน</div>
       <div class="dial-wrap">
@@ -477,25 +508,29 @@ function attachSheetEvents(){
   document.getElementById('close-sheet').onclick = ()=>{ state.modalDrink=null; render(); };
   document.getElementById('sheet-overlay').onclick = (e)=>{ if(e.target.id==='sheet-overlay'){ state.modalDrink=null; render(); } };
   document.querySelectorAll('[data-temp]').forEach(b=> b.onclick = ()=>{ drink._draft.temp=b.dataset.temp; render(); });
+  document.querySelectorAll('[data-roast]').forEach(b=> b.onclick = ()=>{ drink._draft.roast=b.dataset.roast; render(); });
+  document.querySelectorAll('[data-bean]').forEach(b=> b.onclick = ()=>{ drink._draft.bean=b.dataset.bean; render(); });
   document.getElementById('qty-minus').onclick = ()=>{ drink._draft.qty=Math.max(1,drink._draft.qty-1); render(); };
   document.getElementById('qty-plus').onclick = ()=>{ drink._draft.qty=drink._draft.qty+1; render(); };
   document.getElementById('sweet-range').oninput = (e)=>{
     const val = Number(e.target.value);
     drink._draft.sweet = val;
+    // update the dial visuals directly instead of a full re-render,
+    // so dragging on touch devices doesn't get interrupted mid-gesture
     const circumference = 2*Math.PI*60;
     const offset = circumference - (val/100)*circumference;
     document.querySelector('.dial-fill').setAttribute('stroke-dashoffset', offset);
     document.querySelector('.dial-center .val').textContent = val + '%';
     document.querySelector('.dial-center .lbl').textContent = SWEET_LABELS.find(s=>s[0]===val)[1];
     document.querySelector('.sheet-total .amt').textContent =
-      money(drink.prices[drink._draft.temp] * drink._draft.qty) + ' บาท';
+      money(unitPrice(drink, drink._draft) * drink._draft.qty) + ' บาท';
   };
   document.getElementById('add-to-cart').onclick = ()=>{
     const d = drink._draft;
     state.cart.push({
       cid: uid(), drinkId: drink.id, name: drink.name, emoji: drink.emoji,
-      temp: d.temp, sweet: d.sweet, qty: d.qty,
-      unitPrice: drink.prices[d.temp]
+      temp: d.temp, roast: d.roast, bean: d.bean, sweet: d.sweet, qty: d.qty,
+      unitPrice: unitPrice(drink, d)
     });
     state.modalDrink = null;
     state.view = 'cart';
@@ -569,7 +604,7 @@ function renderCart(){
         <div class="ci-emoji">${i.emoji}</div>
         <div class="ci-info">
           <div class="ci-name">${i.name} × ${i.qty}</div>
-          <div class="ci-meta">${i.temp} · หวาน ${i.sweet}%</div>
+          <div class="ci-meta">${itemOptionsLabel(i)}</div>
           <button class="remove-link" data-remove="${i.cid}">ลบออก</button>
         </div>
         <div class="ci-price">${money(i.unitPrice*i.qty)}฿</div>
@@ -614,6 +649,7 @@ function renderCheckoutSheet(total){
   </div>`;
 }
 function fakeQR(){
+  // deterministic pseudo-QR pattern, purely decorative
   let cells='';
   let seed=42;
   function rnd(){ seed=(seed*9301+49297)%233280; return seed/233280; }
@@ -647,7 +683,7 @@ function renderOrderCard(o){
       ${STAGES.map((s,i)=>`<span class="grain ${i<=idx?'filled':''}">🌾</span>`).join('')}
     </div>
     <div class="stage-label">ขั้นตอน ${idx+1}/${STAGES.length}</div>
-    <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${i.temp}, หวาน ${i.sweet}%)`).join('<br>')}</div>
+    <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${itemOptionsLabel(i)})`).join('<br>')}</div>
     <div class="summary-row total" style="margin-top:10px;"><span>รวม</span><span>${money(o.total)}฿</span></div>
   </div>`;
 }
@@ -670,7 +706,7 @@ function renderAdmin(){
         </div>
         <div class="order-status-pill" style="background:${STAGES[idx].color}33;color:${STAGES[idx].color};">${STAGES[idx].label}</div>
       </div>
-      <div class="order-items" style="margin-top:8px;">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${i.temp}, หวาน ${i.sweet}%)`).join('<br>')}</div>
+      <div class="order-items" style="margin-top:8px;">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty} (${itemOptionsLabel(i)})`).join('<br>')}</div>
       <div class="summary-row total"><span>ยอดชำระ</span><span>${money(o.total)}฿</span></div>
       ${o.slip ? `<img class="slip-thumb" src="${o.slip}">` : ''}
       <div class="admin-btn-row">
@@ -687,7 +723,12 @@ function attachGlobalEvents(){
   document.querySelectorAll('[data-nav]').forEach(b=> b.onclick = ()=>{ state.view = b.dataset.nav; render(); });
   document.querySelectorAll('[data-open-drink]').forEach(b=> b.onclick = ()=>{
     const d = DRINKS.find(x=>x.id===b.dataset.openDrink);
-    d._draft = {temp:Object.keys(d.prices)[0], sweet:50, qty:1};
+    d._draft = {
+      temp:Object.keys(d.prices)[0],
+      roast: d.roasts ? d.roasts[0] : undefined,
+      bean: d.beans ? Object.keys(d.beans)[0] : undefined,
+      sweet:50, qty:1
+    };
     state.modalDrink = d;
     render();
   });
