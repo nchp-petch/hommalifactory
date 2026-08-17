@@ -250,26 +250,43 @@
 // prices is keyed by temperature — one price per ร้อน/เย็น option a drink offers.
 // Drinks with only one key (e.g. เย็น only) are single-temp and skip the temp picker.
 // roasts / beans are OPTIONAL and only apply to coffee-based drinks:
-//   roasts: array of roast levels, no price change, e.g. ['อ่อน','กลาง','เข้ม','เข้มพิเศษ']
+//   roasts: array of roast levels, no price change, e.g. ['อ่อน','กลาง','เข้ม']
 //   beans:  object of bean choice -> price add-on, e.g. {'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}
-// Drinks without `roasts`/`beans` simply won't show those pickers (e.g. matcha, ชาไทย).
+// milks is OPTIONAL — alternative milk for dairy-based drinks:
+//   object of milk choice -> price add-on, e.g. {'Almond Milk':10,'Oat Milk':10}
+//   Not selecting any milk = regular milk, no extra charge (there's no default key needed).
+// Drinks without `roasts`/`beans`/`milks` simply won't show those pickers (e.g. เย็นอย่างเดียว).
 const DRINKS = [
-  {id:'d1', name:'อเมริกาโน่', en:'Americano', emoji:'☕️', prices:{'ร้อน':60,'เย็น':65},
-    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'], 
+  {id:'d1', name:'อเมริกาโน', en:'Americano', emoji:'☕️', category:'กาแฟ', prices:{'ร้อน':60,'เย็น':65},
+    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
     beans:{'เมล็ดประจำร้าน':0},
-    specialbeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
-  {id:'d2', name:'ลาเต้', en:'Latte', emoji:'☕🥛', prices:{'ร้อน':70,'เย็น':75},
-    beans:{'เมล็ดประจำร้าน':0,'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
-  {id:'d3', name:'คาปูชิโน่', en:'Cappucino', emoji:'☕️', prices:{'ร้อน':65,'เย็น':70},
-    beans:{'เมล็ดประจำร้าน':0,'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
-  {id:'d4', name:'เอสเปรสโซ่', en:'Espresso', emoji:'☕️', prices:{'ร้อน':60,'เย็น':65}
-  {id:'d5', name:'คาปูชิโนข้าวคั่ว', en:'Toasted Rice Cappuccino', emoji:'🫘', prices:{'ร้อน':80},
-    roasts:['กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
-  {id:'d6', name:'ชาไทยข้าวหอมมะลิ', en:'Jasmine Rice Thai Tea', emoji:'🧋', prices:{'ร้อน':60,'เย็น':70}},
-  {id:'d7', name:'น้ำข้าวหอมมะลิเย็น', en:'Cold Jasmine Rice Milk', emoji:'🥛', prices:{'เย็น':60}},
-  {id:'d8', name:'เอสเพรสโซ่โทนิคข้าว', en:'Rice Espresso Tonic', emoji:'🥃', prices:{'เย็น':85},
-    roasts:['กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
+    specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
+  {id:'d2', name:'ลาเต้', en:'Latte', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':70,'เย็น':75},
+    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
+    beans:{'เมล็ดประจำร้าน':0},
+    specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60},
+    milks:{'Almond Milk':10,'Oat Milk':10}},
+  {id:'d3', name:'คาปูชิโน่', en:'Cappucino', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':65,'เย็น':70},
+    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
+    beans:{'เมล็ดประจำร้าน':0},
+    specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60},
+    milks:{'Almond Milk':10,'Oat Milk':10}},
+  {id:'d4', name:'เอสเปรสโซ่', en:'Espresso', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':60,'เย็น':65},
+    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
+    beans:{'เมล็ดประจำร้าน':0},
+    specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
+    milks:{'Almond Milk':10,'Oat Milk':10}},
+  {id:'d5', name:'อเมริกาโนน้ำผึ้ง', en:'Americano Honey', emoji:'☕️🍯', category:'กาแฟ', prices:{'ร้อน':70,'เย็น'75'},
+  {id:'d6', name:'อเมริกาโนน้ำผึ้งมะนาว', en:'Americano Honey Lime', emoji:'☕️🍯🍋‍🟩', category:'กาแฟ', prices:{'ร้อน':75,'เย็น':80},
+  {id:'d7', name:'อเมริกาโนส้มสด', en:'Americano Orange', emoji:'☕️🍊', category:'กาแฟ', prices:{'เย็น':89},
+  {id:'d8', name:'อเมริกาโนมะพร้าวสด', en:'Americano Coconut', emoji:'☕️🥥', category:'กาแฟ', prices:{'เย็น':89},
+  {id:'d9', name:'อเมริกาโนลิ้นจี่', en:'Americano Lychee', emoji:'☕️🎀', category:'กาแฟ', prices:{'เย็น':89},
+  {id:'d10', name:'อเมริกาโนพีช', en:'Americano Peach', emoji:'☕️🍑', category:'กาแฟ', prices:{'เย็น':89},  
 ];
+// The set of category tabs shown on the menu — add/remove/reorder here.
+// A category with zero drinks still shows as a tab; the grid will just show
+// "ยังไม่มีเมนูในหมวดนี้" until you add a drink with a matching `category`.
+const CATEGORIES = ['กาแฟ','ชา','นม','Matcha','ผลไม้'];
 const SWEET_OPTIONS = ['0%','25%','50%','75%','100%','100+%'];
 const TIME_SLOTS = ['10:00','11:00','12:00','13:00','14:00','15:00'];
 const STAGES = [
@@ -285,6 +302,7 @@ let state = {
   profile: null,          // {name, phone}
   view: 'login',          // login | menu | address | cart | orders
   isAdmin: false,
+  selectedCategory: 'ทั้งหมด',
   addresses: [],
   selectedAddressId: null,
   selectedTimeSlot: null,
@@ -314,17 +332,25 @@ function money(n){ return n.toLocaleString('th-TH',{minimumFractionDigits:0}); }
 function priceRangeLabel(d){
   const vals = Object.values(d.prices);
   const beanAdd = d.beans ? Math.max(...Object.values(d.beans)) : 0;
-  const min = Math.min(...vals), max = Math.max(...vals) + beanAdd;
+  const specialAdd = d.specialBeans ? Math.max(...Object.values(d.specialBeans)) : 0;
+  const milkAdd = d.milks ? Math.max(...Object.values(d.milks)) : 0;
+  const min = Math.min(...vals), max = Math.max(...vals) + Math.max(beanAdd,specialAdd) + milkAdd;
   return min===max ? `${money(min)} บาท` : `${money(min)}–${money(max)} บาท`;
 }
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function unitPrice(drink, draft){
-  return drink.prices[draft.temp] + (drink.beans ? drink.beans[draft.bean] : 0);
+  let beanAdd = 0;
+  if(draft.beanCategory==='special' && drink.specialBeans) beanAdd = drink.specialBeans[draft.bean] || 0;
+  else if(draft.beanCategory==='regular' && drink.beans) beanAdd = drink.beans[draft.bean] || 0;
+  return drink.prices[draft.temp]
+    + beanAdd
+    + (drink.milks && draft.milk ? drink.milks[draft.milk] : 0);
 }
 function itemOptionsLabel(i){
   const parts = [i.temp];
   if(i.roast) parts.push(`คั่ว${i.roast}`);
-  if(i.bean) parts.push(i.bean);
+  if(i.bean) parts.push(i.beanCategory==='special' ? `เมล็ดพิเศษ: ${i.bean}` : i.bean);
+  if(i.milk) parts.push(i.milk);
   parts.push(`หวาน ${i.sweet}`);
   return parts.join(' · ');
 }
@@ -427,18 +453,24 @@ function attachLoginEvents(){
 
 /* ===================== MENU ===================== */
 function renderMenu(){
+  const filtered = state.selectedCategory==='ทั้งหมด' ? DRINKS : DRINKS.filter(d=>d.category===state.selectedCategory);
   return `
     <div class="section-title">เมนูเครื่องดื่ม</div>
     <div class="section-sub">กลั่นจากข้าวหอมมะลิสุรินทร์ · เลือกระดับความหวานได้เอง</div>
+    <div class="pill-row" style="margin-bottom:16px;">
+      <button class="pill ${state.selectedCategory==='ทั้งหมด'?'selected':''}" data-category="ทั้งหมด">ทั้งหมด</button>
+      ${CATEGORIES.map(c=>`<button class="pill ${state.selectedCategory===c?'selected':''}" data-category="${c}">${c}</button>`).join('')}
+    </div>
+    ${filtered.length===0 ? `<div class="addr-hint">ยังไม่มีเมนูในหมวดนี้</div>` : `
     <div class="drink-grid">
-      ${DRINKS.map(d=>`
+      ${filtered.map(d=>`
         <div class="drink-card" data-open-drink="${d.id}">
           <div class="drink-emoji">${d.emoji}</div>
           <div class="drink-name">${d.name}</div>
           <div class="drink-name-en">${d.en}</div>
           <div class="drink-price">${priceRangeLabel(d)}</div>
         </div>`).join('')}
-    </div>`;
+    </div>`}`;
 }
 
 function renderDrinkSheet(drink){
@@ -464,16 +496,32 @@ function renderDrinkSheet(drink){
       <div class="option-label">อุณหภูมิ</div>
       <div class="pill-row"><span class="pill selected" style="cursor:default;">${temps[0]}</span></div>`}
 
-      ${drink.roasts ? `
+      ${drink.beans ? `
+      <div class="option-label">เมล็ดประจำร้าน</div>
+      <div class="pill-row">
+        ${Object.keys(drink.beans).map(bn=>`<button class="pill ${draft.beanCategory==='regular'&&draft.bean===bn?'selected':''}" data-bean-regular="${bn}">${bn}${drink.beans[bn]?` +${drink.beans[bn]}฿`:''}</button>`).join('')}
+      </div>` : ''}
+
+      ${drink.specialBeans ? `
+      <div class="option-label">เมล็ดพิเศษ · คั่วอ่อน (Light Roast)</div>
+      <div class="pill-row">
+        ${Object.keys(drink.specialBeans).map(bn=>`<button class="pill ${draft.beanCategory==='special'&&draft.bean===bn?'selected':''}" data-bean-special="${bn}">${bn} +${drink.specialBeans[bn]}฿</button>`).join('')}
+      </div>` : ''}
+
+      ${drink.roasts ? (draft.beanCategory==='special' ? `
+      <div class="option-label">ระดับการคั่ว</div>
+      <div class="addr-hint" style="margin-top:0;">🌿 เมล็ดพิเศษกลุ่มนี้คั่วอ่อน (Light Roast) เป็นมาตรฐาน ไม่สามารถเลือกระดับการคั่วอื่นได้</div>
+      ` : `
       <div class="option-label">ระดับการคั่ว</div>
       <div class="pill-row">
         ${drink.roasts.map(r=>`<button class="pill ${draft.roast===r?'selected':''}" data-roast="${r}">${r}</button>`).join('')}
-      </div>` : ''}
+      </div>`) : ''}
 
-      ${drink.beans ? `
-      <div class="option-label">เมล็ดกาแฟ</div>
+      ${drink.milks ? `
+      <div class="option-label">นมทางเลือก (ไม่เลือก = ไม่มีค่าใช้จ่ายเพิ่ม)</div>
       <div class="pill-row">
-        ${Object.keys(drink.beans).map(bn=>`<button class="pill ${draft.bean===bn?'selected':''}" data-bean="${bn}">${bn}${drink.beans[bn]?` +${drink.beans[bn]}฿`:''}</button>`).join('')}
+        <button class="pill ${!draft.milk?'selected':''}" data-milk="">นมปกติ</button>
+        ${Object.keys(drink.milks).map(mk=>`<button class="pill ${draft.milk===mk?'selected':''}" data-milk="${mk}">${mk}${drink.milks[mk]?` +${drink.milks[mk]}฿`:''}</button>`).join('')}
       </div>` : ''}
 
       <div class="option-label">ระดับความหวาน</div>
@@ -503,7 +551,19 @@ function attachSheetEvents(){
   document.getElementById('sheet-overlay').onclick = (e)=>{ if(e.target.id==='sheet-overlay'){ state.modalDrink=null; render(); } };
   document.querySelectorAll('[data-temp]').forEach(b=> b.onclick = ()=>{ drink._draft.temp=b.dataset.temp; render(); });
   document.querySelectorAll('[data-roast]').forEach(b=> b.onclick = ()=>{ drink._draft.roast=b.dataset.roast; render(); });
-  document.querySelectorAll('[data-bean]').forEach(b=> b.onclick = ()=>{ drink._draft.bean=b.dataset.bean; render(); });
+  document.querySelectorAll('[data-bean-regular]').forEach(b=> b.onclick = ()=>{
+    drink._draft.beanCategory = 'regular';
+    drink._draft.bean = b.dataset.beanRegular;
+    if(drink.roasts && drink._draft.roast==='อ่อน') drink._draft.roast = drink.roasts[0];
+    render();
+  });
+  document.querySelectorAll('[data-bean-special]').forEach(b=> b.onclick = ()=>{
+    drink._draft.beanCategory = 'special';
+    drink._draft.bean = b.dataset.beanSpecial;
+    if(drink.roasts) drink._draft.roast = 'อ่อน';
+    render();
+  });
+  document.querySelectorAll('[data-milk]').forEach(b=> b.onclick = ()=>{ drink._draft.milk=b.dataset.milk || null; render(); });
   document.getElementById('qty-minus').onclick = ()=>{ drink._draft.qty=Math.max(1,drink._draft.qty-1); render(); };
   document.getElementById('qty-plus').onclick = ()=>{ drink._draft.qty=drink._draft.qty+1; render(); };
   document.getElementById('sweet-select').onchange = (e)=>{
@@ -513,7 +573,7 @@ function attachSheetEvents(){
     const d = drink._draft;
     state.cart.push({
       cid: uid(), drinkId: drink.id, name: drink.name, emoji: drink.emoji,
-      temp: d.temp, roast: d.roast, bean: d.bean, sweet: d.sweet, qty: d.qty,
+      temp: d.temp, roast: d.roast, bean: d.bean, beanCategory: d.beanCategory, milk: d.milk, sweet: d.sweet, qty: d.qty,
       unitPrice: unitPrice(drink, d)
     });
     state.modalDrink = null;
@@ -737,12 +797,18 @@ function renderAdmin(){
 function attachGlobalEvents(){
   document.getElementById('toggle-admin').onclick = ()=>{ state.isAdmin = !state.isAdmin; render(); };
   document.querySelectorAll('[data-nav]').forEach(b=> b.onclick = ()=>{ state.view = b.dataset.nav; render(); });
+  document.querySelectorAll('[data-category]').forEach(b=> b.onclick = ()=>{ state.selectedCategory = b.dataset.category; render(); });
   document.querySelectorAll('[data-open-drink]').forEach(b=> b.onclick = ()=>{
     const d = DRINKS.find(x=>x.id===b.dataset.openDrink);
+    const beanCategory = d.beans ? 'regular' : (d.specialBeans ? 'special' : undefined);
+    const bean = beanCategory==='regular' ? Object.keys(d.beans)[0]
+               : beanCategory==='special' ? Object.keys(d.specialBeans)[0]
+               : undefined;
     d._draft = {
       temp:Object.keys(d.prices)[0],
-      roast: d.roasts ? d.roasts[0] : undefined,
-      bean: d.beans ? Object.keys(d.beans)[0] : undefined,
+      roast: d.roasts ? (beanCategory==='special' ? 'อ่อน' : d.roasts[0]) : undefined,
+      beanCategory, bean,
+      milk: null,
       sweet:'50%', qty:1
     };
     state.modalDrink = d;
