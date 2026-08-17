@@ -255,11 +255,13 @@
 // Drinks without `roasts`/`beans` simply won't show those pickers (e.g. matcha, ชาไทย).
 const DRINKS = [
   {id:'d1', name:'อเมริกาโน่', en:'Americano', emoji:'☕️', prices:{'ร้อน':60,'เย็น':65},
-    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'], beans:{'เมล็ดประจำร้าน':0,'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
+    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'], 
+    beans:{'เมล็ดประจำร้าน':0},
+    specialbeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
   {id:'d2', name:'ลาเต้', en:'Latte', emoji:'☕🥛', prices:{'ร้อน':70,'เย็น':75},
     beans:{'เมล็ดประจำร้าน':0,'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
   {id:'d3', name:'คาปูชิโน่', en:'Cappucino', emoji:'☕️', prices:{'ร้อน':65,'เย็น':70},
-    beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
+    beans:{'เมล็ดประจำร้าน':0,'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
   {id:'d4', name:'เอสเปรสโซ่', en:'Espresso', emoji:'☕️', prices:{'ร้อน':60,'เย็น':65}
   {id:'d5', name:'คาปูชิโนข้าวคั่ว', en:'Toasted Rice Cappuccino', emoji:'🫘', prices:{'ร้อน':80},
     roasts:['กลาง','เข้ม'], beans:{'เบลนด์ร้านประจำ':0,'สิงเกิลออริจิน':15}},
