@@ -258,54 +258,60 @@
 // Drinks without `roasts`/`beans`/`milks` simply won't show those pickers (e.g. เย็นอย่างเดียว).
 const DRINKS = [
   {id:'d1', name:'อเมริกาโน', en:'Americano', emoji:'☕️', category:'กาแฟ', prices:{'ร้อน':60,'เย็น':65},
-    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
+    roasts:['กลาง','เข้ม','เข้มพิเศษ'],
     beans:{'เมล็ดประจำร้าน':0},
     specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
   {id:'d2', name:'ลาเต้', en:'Latte', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':70,'เย็น':75},
-    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
+    roasts:['กลาง','เข้ม','เข้มพิเศษ'],
     beans:{'เมล็ดประจำร้าน':0},
     specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60},
     milks:{'Almond Milk':10,'Oat Milk':10}},
-  {id:'d3', name:'คาปูชิโน่', en:'Cappuccino', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':65,'เย็น':70},
-    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
+  {id:'d3', name:'คาปูชิโน่', en:'Cappucino', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':65,'เย็น':70},
+    roasts:['กลาง','เข้ม','เข้มพิเศษ'],
     beans:{'เมล็ดประจำร้าน':0},
     specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60},
     milks:{'Almond Milk':10,'Oat Milk':10}},
-  {id:'d4', name:'เอสเปรสโซ่', en:'Espresso', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':60,'เย็น':65},
-    roasts:['อ่อน','กลาง','เข้ม','เข้มพิเศษ'],
-    beans:{'เมล็ดประจำร้าน':0}},
-  {id:'d5', name:'มอคค่า', en:'Mocha', emoji:'☕️🍫', category:'กาแฟ', prices:{'ร้อน':70,'เย็น':75}},  
+  {id:'d4', name:'เอสเปรสโซ่', en:'Espresso', emoji:'☕️', category:'กาแฟ', prices:{'ร้อน':60,'เย็น':65},
+    roasts:['กลาง','เข้ม','เข้มพิเศษ'],
+    beans:{'เมล็ดประจำร้าน':0},
+    specialBeans:{'Maedaetnoi - Wild Blossom':35,'Maedaetnoi - Common Ground':35,'Mae Sui - Honey Bloom':35,'PHU-109':45,'PHU-515':45,'PHU-615':45,'PHU-625':45,'Costa Rica - Fruit Bomb':50,'La Buena':60}},
+  {id:'d5', name:'มอคค่า', en:'Mocha', emoji:'☕️🍫', category:'กาแฟ', prices:{'ร้อน':70,'เย็น':75}},
   {id:'d6', name:'อเมริกาโนน้ำผึ้ง', en:'Americano Honey', emoji:'☕️🍯', category:'กาแฟ', prices:{'ร้อน':70,'เย็น':75}},
-  {id:'d7', name:'อเมริกาโนน้ำผึ้งมะนาว', en:'Americano Honey Lime', emoji:'☕️🍯🍋‍🟩', category:'กาแฟ', prices:{'ร้อน':75,'เย็น':80}},
-  {id:'d8', name:'อเมริกาโนส้มสด', en:'Americano Orange', emoji:'☕️🍊', category:'กาแฟ', prices:{'เย็น':89}},
-  {id:'d9', name:'อเมริกาโนมะพร้าวสด', en:'Americano Coconut', emoji:'☕️🥥', category:'กาแฟ', prices:{'เย็น':89}},
-  {id:'d10', name:'อเมริกาโนลิ้นจี่', en:'Americano Lychee', emoji:'☕️🎀', category:'กาแฟ', prices:{'เย็น':89}},
-  {id:'d11', name:'อเมริกาโนพีช', en:'Americano Peach', emoji:'☕️🍑', category:'กาแฟ', prices:{'เย็น':89}},  
-  {id:'d12', name:'กาแฟข้าวหมาก', en:'Khao Mak Coffee', emoji:'☕️🌾', category:'กาแฟ', prices:{'เย็น':89}},
+  {id:'d7', name:'อเมริกาโนน้ำผึ้งมะนาว', en:'Americano Honey Lime', emoji:'☕️🍯🍋', category:'กาแฟ', prices:{'ร้อน':75,'เย็น':80}},
+  {id:'d8', name:'อเมริกาโนส้มสด', en:'Americano Orange', emoji:'☕️🍊', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
+  {id:'d9', name:'อเมริกาโนมะพร้าวสด', en:'Americano Coconut', emoji:'☕️🥥', category:'กาแฟ',noSweet:true, prices:{'เย็น':89}},
+  {id:'d10', name:'อเมริกาโนลิ้นจี่', en:'Americano Lychee', emoji:'☕️🍒', category:'กาแฟ', prices:{'เย็น':89}},
+  {id:'d11', name:'อเมริกาโนพีช', en:'Americano Peach', emoji:'☕️🍑', category:'กาแฟ', prices:{'เย็น':89}},
+  {id:'d12', name:'กาแฟข้าวหมาก', en:'Khao Mak Coffee', emoji:'☕️🌾', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
   {id:'d13', name:'คาราเมลมัคคิอาโต้', en:'Caramel Macchiato', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':75,'เย็น':80}},
   {id:'d14', name:'ชาเขียวนมสด', en:'Milk Green Tea', emoji:'🍵🥛', category:'ชา', prices:{'ร้อน':60,'เย็น':65}},
-  {id:'d15', name:'ชาเขียวน้ำผึ้งมะนาว', en:'Green Tea Honey Lime', emoji:'🍵🍯🍋‍🟩', category:'ชา', prices:{'ร้อน':65,'เย็น':70}},
-  {id:'d16', name:'ชาเขียวข้าวหมาก', en:'Khao Mak Green Tea', emoji:'🍵🌾', category:'ชา', prices:{'เย็น':79}},
-  {id:'d17', name:'ชาเขียวลิ้นจี่', en:'Green Tea Lychee', emoji:'🍵🎀', category:'ชา', prices:{'เย็น':75}},
+  {id:'d15', name:'ชาเขียวน้ำผึ้งมะนาว', en:'Green Tea Honey Lime', emoji:'🍵🍯🍋', category:'ชา', prices:{'ร้อน':65,'เย็น':70}},
+  {id:'d16', name:'ชาเขียวข้าวหมาก', en:'Khao Mak Green Tea', emoji:'🍵🌾', category:'ชา', noSweet:true, prices:{'เย็น':79}},
+  {id:'d17', name:'ชาเขียวลิ้นจี่', en:'Green Tea Lychee', emoji:'🍵🍒', category:'ชา', prices:{'เย็น':75}},
   {id:'d18', name:'ชาเขียวข้าวหอมมะลิ', en:'Hommali Green Tea', emoji:'🍵🌾✨', category:'ชา', prices:{'ปั่น':80}},
   {id:'d19', name:'ชาไทย', en:'Thai Tea', emoji:'🍵🟠', category:'ชา', prices:{'ร้อน':60,'เย็น':65}},
-  {id:'d20', name:'ชาพีช', en:'Peach Tea', emoji:'🍵🍑', category:'ชา', prices:{'เย็น':70}},
+  {id:'d20', name:'ชาพีช', en:'Peach Tea', emoji:'🍵🍑', category:'ชา', noSweet:true, prices:{'เย็น':70}},
   {id:'d21', name:'ชามะนาว', en:'Lemon Tea', emoji:'🍵🍋', category:'ชา', prices:{'เย็น':65}},
   {id:'d22', name:'ชาดำ', en:'Black Tea', emoji:'⚫️', category:'ชา', prices:{'เย็น':60}},
   {id:'d23', name:'ชาดำน้ำส้ม', en:'Orange Black Tea', emoji:'⚫️🍊', category:'ชา', prices:{'เย็น':70}},
   {id:'d24', name:'เพียวมัทฉะ', en:'Clear Matcha', emoji:'🍵', category:'มัทฉะ', prices:{'เย็น':75},
-     specialMatcha:{'Yame - Nutty':5}},
+    noSweet:true, specialMatcha:{'Yame - Nutty':5}},
   {id:'d25', name:'มัทฉะลาเต้', en:'Matcha Latte', emoji:'🍵🥛', category:'มัทฉะ', prices:{'ร้อน':75,'เย็น':75},
-     specialMatcha:{'Yame - Nutty':5},
-     milks:{'Almond Milk':10,'Oat Milk':10}},
-  {id:'d26', name:'มัทฉะส้มสด', en:'Matcha Fresh Orange Juice', emoji:'🍵🍊', category:'มัทฉะ', prices:{'เย็น':95}},
-  {id:'d27', name:'มัทฉะมะพร้าวสด', en:'Matcha Fresh Coconut Juice', emoji:'🍵🥥', category:'มัทฉะ', prices:{'เย็น':95}},
-  {id:'d28', name:'มัทฉะน้ำผึ้งมะนาว', en:'Matcha Honey Lime', emoji:'🍵🍯🍋‍🟩', category:'มัทฉะ', prices:{'เย็น':89}},
+    specialMatcha:{'Yame - Nutty':5},
+    milks:{'Almond Milk':10,'Oat Milk':10}},
+  {id:'d26', name:'มัทฉะส้มสด', en:'Matcha Fresh Orange Juice', emoji:'🍵🍊', category:'มัทฉะ', prices:{'เย็น':95},
+    noSweet:true, specialMatcha:{'Yame - Nutty':5}},
+  {id:'d27', name:'มัทฉะมะพร้าวสด', en:'Matcha Fresh Coconut Juice', emoji:'🍵🥥', category:'มัทฉะ', prices:{'เย็น':95},
+    noSweet:true, specialMatcha:{'Yame - Nutty':5}},
+  {id:'d28', name:'มัทฉะน้ำผึ้งมะนาว', en:'Matcha Honey Lime', emoji:'🍵🍯🍋', category:'มัทฉะ', prices:{'เย็น':89},
+    noSweet:true, specialMatcha:{'Yame - Nutty':5}},
   {id:'d29', name:'โฮจิฉะลาเต้', en:'Houjicha Latte', emoji:'🍵', category:'มัทฉะ', prices:{'เย็น':70}},
 ];
 // The set of category tabs shown on the menu — add/remove/reorder here.
 // A category with zero drinks still shows as a tab; the grid will just show
 // "ยังไม่มีเมนูในหมวดนี้" until you add a drink with a matching `category`.
+// IMPORTANT: each name here must match a drink's `category` value EXACTLY
+// (same spelling, no stray characters) or that tab will always look empty.
 const CATEGORIES = ['กาแฟ','ชา','นม','มัทฉะ','ผลไม้'];
 const SWEET_OPTIONS = ['0%','25%','50%','75%','100%','100+%'];
 const TIME_SLOTS = ['10:00','11:00','12:00','13:00','14:00','15:00'];
@@ -354,7 +360,8 @@ function priceRangeLabel(d){
   const beanAdd = d.beans ? Math.max(...Object.values(d.beans)) : 0;
   const specialAdd = d.specialBeans ? Math.max(...Object.values(d.specialBeans)) : 0;
   const milkAdd = d.milks ? Math.max(...Object.values(d.milks)) : 0;
-  const min = Math.min(...vals), max = Math.max(...vals) + Math.max(beanAdd,specialAdd) + milkAdd;
+  const matchaAdd = d.specialMatcha ? Math.max(...Object.values(d.specialMatcha)) : 0;
+  const min = Math.min(...vals), max = Math.max(...vals) + Math.max(beanAdd,specialAdd) + milkAdd + matchaAdd;
   return min===max ? `${money(min)} บาท` : `${money(min)}–${money(max)} บาท`;
 }
 function uid(){ return Math.random().toString(36).slice(2,9); }
@@ -364,14 +371,16 @@ function unitPrice(drink, draft){
   else if(draft.beanCategory==='regular' && drink.beans) beanAdd = drink.beans[draft.bean] || 0;
   return drink.prices[draft.temp]
     + beanAdd
-    + (drink.milks && draft.milk ? drink.milks[draft.milk] : 0);
+    + (drink.milks && draft.milk ? drink.milks[draft.milk] : 0)
+    + (drink.specialMatcha && draft.matcha ? drink.specialMatcha[draft.matcha] : 0);
 }
 function itemOptionsLabel(i){
   const parts = [i.temp];
   if(i.roast) parts.push(`คั่ว${i.roast}`);
   if(i.bean) parts.push(i.beanCategory==='special' ? `เมล็ดพิเศษ: ${i.bean}` : i.bean);
   if(i.milk) parts.push(i.milk);
-  parts.push(`หวาน ${i.sweet}`);
+  if(i.matcha) parts.push(`มัทฉะ: ${i.matcha}`);
+  if(i.sweet) parts.push(`หวาน ${i.sweet}`);
   return parts.join(' · ');
 }
 function showToast(title, body){
@@ -544,12 +553,20 @@ function renderDrinkSheet(drink){
         ${Object.keys(drink.milks).map(mk=>`<button class="pill ${draft.milk===mk?'selected':''}" data-milk="${mk}">${mk}${drink.milks[mk]?` +${drink.milks[mk]}฿`:''}</button>`).join('')}
       </div>` : ''}
 
+      ${drink.specialMatcha ? `
+      <div class="option-label">เกรดมัทฉะพิเศษ (ไม่เลือก = ไม่มีค่าใช้จ่ายเพิ่ม)</div>
+      <div class="pill-row">
+        <button class="pill ${!draft.matcha?'selected':''}" data-matcha="">มัทฉะปกติ</button>
+        ${Object.keys(drink.specialMatcha).map(mk=>`<button class="pill ${draft.matcha===mk?'selected':''}" data-matcha="${mk}">${mk}${drink.specialMatcha[mk]?` +${drink.specialMatcha[mk]}฿`:''}</button>`).join('')}
+      </div>` : ''}
+
+      ${drink.noSweet ? '' : `
       <div class="option-label">ระดับความหวาน</div>
       <div class="select-box">
         <select id="sweet-select">
           ${SWEET_OPTIONS.map(s=>`<option value="${s}" ${draft.sweet===s?'selected':''}>${s}</option>`).join('')}
         </select>
-      </div>
+      </div>`}
 
       <div class="qty-row" style="justify-content:center;">
         <button class="qty-btn" id="qty-minus">−</button>
@@ -584,16 +601,18 @@ function attachSheetEvents(){
     render();
   });
   document.querySelectorAll('[data-milk]').forEach(b=> b.onclick = ()=>{ drink._draft.milk=b.dataset.milk || null; render(); });
+  document.querySelectorAll('[data-matcha]').forEach(b=> b.onclick = ()=>{ drink._draft.matcha=b.dataset.matcha || null; render(); });
   document.getElementById('qty-minus').onclick = ()=>{ drink._draft.qty=Math.max(1,drink._draft.qty-1); render(); };
   document.getElementById('qty-plus').onclick = ()=>{ drink._draft.qty=drink._draft.qty+1; render(); };
-  document.getElementById('sweet-select').onchange = (e)=>{
+  const sweetSelect = document.getElementById('sweet-select');
+  if(sweetSelect) sweetSelect.onchange = (e)=>{
     drink._draft.sweet = e.target.value;
   };
   document.getElementById('add-to-cart').onclick = ()=>{
     const d = drink._draft;
     state.cart.push({
       cid: uid(), drinkId: drink.id, name: drink.name, emoji: drink.emoji,
-      temp: d.temp, roast: d.roast, bean: d.bean, beanCategory: d.beanCategory, milk: d.milk, sweet: d.sweet, qty: d.qty,
+      temp: d.temp, roast: d.roast, bean: d.bean, beanCategory: d.beanCategory, milk: d.milk, matcha: d.matcha, sweet: d.sweet, qty: d.qty,
       unitPrice: unitPrice(drink, d)
     });
     state.modalDrink = null;
@@ -829,7 +848,8 @@ function attachGlobalEvents(){
       roast: d.roasts ? (beanCategory==='special' ? 'อ่อน' : d.roasts[0]) : undefined,
       beanCategory, bean,
       milk: null,
-      sweet:'50%', qty:1
+      matcha: null,
+      sweet: d.noSweet ? null : '50%', qty:1
     };
     state.modalDrink = d;
     render();
