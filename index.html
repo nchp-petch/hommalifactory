@@ -37,7 +37,8 @@
   #phone{
     width:100%;
     max-width:430px;
-    min-height:100vh;
+    height:100vh;
+    max-height:100vh;
     background:linear-gradient(180deg,var(--husk-2),var(--husk));
     position:relative;
     display:flex;
@@ -70,7 +71,7 @@
   .admin-toggle.active{background:var(--gold);color:var(--husk);border-color:var(--gold);}
 
   /* ---- content ---- */
-  .content{flex:1; padding:4px 18px 100px; overflow-y:auto;}
+  .content{flex:1; min-height:0; padding:4px 18px 100px; overflow-y:auto;}
   .section-title{font-size:19px;color:var(--jasmine);margin:14px 0 4px;}
   .section-sub{font-size:12px;color:var(--jasmine-dim);margin-bottom:16px;}
 
@@ -279,19 +280,19 @@ const DRINKS = [
   {id:'d6', name:'อเมริกาโนน้ำผึ้ง', en:'Americano Honey', emoji:'☕️🍯', category:'กาแฟ', prices:{'ร้อน':70,'เย็น':75}},
   {id:'d7', name:'อเมริกาโนน้ำผึ้งมะนาว', en:'Americano Honey Lime', emoji:'☕️🍯🍋', category:'กาแฟ', prices:{'ร้อน':75,'เย็น':80}},
   {id:'d8', name:'อเมริกาโนส้มสด', en:'Americano Orange', emoji:'☕️🍊', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
-  {id:'d9', name:'อเมริกาโนมะพร้าวสด', en:'Americano Coconut', emoji:'☕️🥥', category:'กาแฟ',noSweet:true, prices:{'เย็น':89}},
-  {id:'d10', name:'อเมริกาโนลิ้นจี่', en:'Americano Lychee', emoji:'☕️🍒', category:'กาแฟ', prices:{'เย็น':89}},
-  {id:'d11', name:'อเมริกาโนพีช', en:'Americano Peach', emoji:'☕️🍑', category:'กาแฟ', prices:{'เย็น':89}},
+  {id:'d9', name:'อเมริกาโนมะพร้าวสด', en:'Americano Coconut', emoji:'☕️🥥', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
+  {id:'d10', name:'อเมริกาโนลิ้นจี่', en:'Americano Lychee', emoji:'☕️🍒', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
+  {id:'d11', name:'อเมริกาโนพีช', en:'Americano Peach', emoji:'☕️🍑', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
   {id:'d12', name:'กาแฟข้าวหมาก', en:'Khao Mak Coffee', emoji:'☕️🌾', category:'กาแฟ', noSweet:true, prices:{'เย็น':89}},
   {id:'d13', name:'คาราเมลมัคคิอาโต้', en:'Caramel Macchiato', emoji:'☕️🥛', category:'กาแฟ', prices:{'ร้อน':75,'เย็น':80}},
   {id:'d14', name:'ชาเขียวนมสด', en:'Milk Green Tea', emoji:'🍵🥛', category:'ชา', prices:{'ร้อน':60,'เย็น':65}},
   {id:'d15', name:'ชาเขียวน้ำผึ้งมะนาว', en:'Green Tea Honey Lime', emoji:'🍵🍯🍋', category:'ชา', prices:{'ร้อน':65,'เย็น':70}},
   {id:'d16', name:'ชาเขียวข้าวหมาก', en:'Khao Mak Green Tea', emoji:'🍵🌾', category:'ชา', noSweet:true, prices:{'เย็น':79}},
-  {id:'d17', name:'ชาเขียวลิ้นจี่', en:'Green Tea Lychee', emoji:'🍵🍒', category:'ชา', prices:{'เย็น':75}},
+  {id:'d17', name:'ชาเขียวลิ้นจี่', en:'Green Tea Lychee', emoji:'🍵🍒', category:'ชา', noSweet:true, prices:{'เย็น':75}},
   {id:'d18', name:'ชาเขียวข้าวหอมมะลิ', en:'Hommali Green Tea', emoji:'🍵🌾✨', category:'ชา', prices:{'ปั่น':80}},
   {id:'d19', name:'ชาไทย', en:'Thai Tea', emoji:'🍵🟠', category:'ชา', prices:{'ร้อน':60,'เย็น':65}},
   {id:'d20', name:'ชาพีช', en:'Peach Tea', emoji:'🍵🍑', category:'ชา', noSweet:true, prices:{'เย็น':70}},
-  {id:'d21', name:'ชามะนาว', en:'Lemon Tea', emoji:'🍵🍋', category:'ชา', prices:{'เย็น':65}},
+  {id:'d21', name:'ชามะนาว', en:'Lemon Tea', emoji:'🍵🍋', category:'ชา', noSweet:true, prices:{'เย็น':65}},
   {id:'d22', name:'ชาดำ', en:'Black Tea', emoji:'⚫️', category:'ชา', prices:{'เย็น':60}},
   {id:'d23', name:'ชาดำน้ำส้ม', en:'Orange Black Tea', emoji:'⚫️🍊', category:'ชา', prices:{'เย็น':70}},
   {id:'d24', name:'เพียวมัทฉะ', en:'Clear Matcha', emoji:'🍵', category:'มัทฉะ', prices:{'เย็น':75},
@@ -365,6 +366,15 @@ function priceRangeLabel(d){
   return min===max ? `${money(min)} บาท` : `${money(min)}–${money(max)} บาท`;
 }
 function uid(){ return Math.random().toString(36).slice(2,9); }
+// Delivery fee rule: 3+ drinks (by total quantity) = free delivery, otherwise 10฿.
+// No address selected yet = no fee shown (nothing to deliver to).
+const FREE_DELIVERY_MIN_QTY = 3;
+const DELIVERY_FEE = 10;
+function calcDeliveryFee(cart, hasAddress){
+  if(!hasAddress) return 0;
+  const totalQty = cart.reduce((s,i)=>s+i.qty,0);
+  return totalQty>=FREE_DELIVERY_MIN_QTY ? 0 : DELIVERY_FEE;
+}
 function unitPrice(drink, draft){
   let beanAdd = 0;
   if(draft.beanCategory==='special' && drink.specialBeans) beanAdd = drink.specialBeans[draft.bean] || 0;
@@ -704,7 +714,8 @@ function renderCart(){
     return `<div class="empty-state"><div class="ee">🧺</div>ตะกร้าว่างเปล่า<br><span style="font-size:11px;">เลือกเมนูโปรดของคุณได้เลย</span></div>`;
   }
   const subtotal = state.cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-  const deliveryFee = state.selectedAddressId ? 20 : 0;
+  const totalQty = state.cart.reduce((s,i)=>s+i.qty,0);
+  const deliveryFee = calcDeliveryFee(state.cart, !!state.selectedAddressId);
   const total = subtotal + deliveryFee;
   const addr = state.addresses.find(a=>a.id===state.selectedAddressId);
   return `
@@ -731,9 +742,10 @@ function renderCart(){
 
     <div style="margin-top:20px;">
       <div class="summary-row"><span>ยอดรวมสินค้า</span><span>${money(subtotal)}฿</span></div>
-      <div class="summary-row"><span>ค่าจัดส่ง</span><span>${deliveryFee?money(deliveryFee)+'฿':'—'}</span></div>
+      <div class="summary-row"><span>ค่าจัดส่ง</span><span>${deliveryFee?money(deliveryFee)+'฿':(state.selectedAddressId?'ฟรี':'—')}</span></div>
       <div class="summary-row total"><span>ยอดชำระทั้งหมด</span><span>${money(total)}฿</span></div>
     </div>
+    ${totalQty>0 && totalQty<FREE_DELIVERY_MIN_QTY ? `<div class="addr-hint">🚴 สั่งเพิ่มอีก ${FREE_DELIVERY_MIN_QTY-totalQty} แก้ว รับส่งฟรี! (ตอนนี้ ${totalQty}/${FREE_DELIVERY_MIN_QTY} แก้ว)</div>` : ''}
     <button class="primary-btn" id="go-checkout" style="max-width:none;margin-top:14px;" ${(!state.selectedAddressId || !state.selectedTimeSlot)?'disabled':''}>
       ${!state.selectedAddressId ? 'กรุณาเลือกที่อยู่ก่อน' : !state.selectedTimeSlot ? 'กรุณาเลือกรอบจัดส่ง' : '💳 ชำระเงิน'}
     </button>
@@ -886,7 +898,7 @@ function attachGlobalEvents(){
   };
   const submitOrder = document.getElementById('submit-order');
   if(submitOrder) submitOrder.onclick = async ()=>{
-    const subtotal = state.cart.reduce((s,i)=>s+i.unitPrice*i.qty,0) + 20;
+    const subtotal = state.cart.reduce((s,i)=>s+i.unitPrice*i.qty,0) + calcDeliveryFee(state.cart, true);
     orderCounter++;
     const order = {
       id: uid(), num: orderCounter,
